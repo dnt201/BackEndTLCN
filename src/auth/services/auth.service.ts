@@ -37,4 +37,22 @@ export class AuthService {
       throw new UnauthorizedException(error.message);
     }
   }
+
+  public async getAuthenticatedUser(email: string, password: string) {
+    try {
+      const user = await this.userService.getUserByEmail(email);
+      await this.verifyPassword(password, user.password);
+
+      return user;
+    } catch (error) {
+      throw new UnauthorizedException('Wrong credentials provided');
+    }
+  }
+
+  private async verifyPassword(password: string, hashedPassword: string) {
+    const isPasswordMatching = await bcrypt.compare(password, hashedPassword);
+    if (!isPasswordMatching) {
+      throw new UnauthorizedException('Wrong credentials provided');
+    }
+  }
 }

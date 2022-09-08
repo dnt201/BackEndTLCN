@@ -12,6 +12,7 @@ import { ICreated } from 'src/common/model/ICreated.interface';
 import { IModified } from 'src/common/model/IModified.interface';
 import { IDeleted } from 'src/common/model/IDeleted.interface';
 import { Gender } from 'src/common/constants/gender.constant';
+import { Exclude } from 'class-transformer';
 
 @Entity('User')
 export class User implements ICreated, IModified, IDeleted {
@@ -26,6 +27,7 @@ export class User implements ICreated, IModified, IDeleted {
   public username: string;
 
   @Column()
+  @Exclude()
   public password: string;
 
   @Column({ default: '' })
@@ -42,15 +44,19 @@ export class User implements ICreated, IModified, IDeleted {
   public gender: Gender;
 
   @CreateDateColumn()
+  @Exclude()
   public dateCreated: Date;
 
   @UpdateDateColumn()
+  @Exclude()
   public dateModified: Date;
 
   @Column({ default: 'true' })
   @Index()
+  @Exclude()
   public deleted: boolean;
 
   @DeleteDateColumn()
+  @Exclude()
   public dateDeleted: Date;
 }
