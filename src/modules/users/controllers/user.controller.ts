@@ -6,7 +6,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 
-import { UsersService } from '../users/services/users.service';
+import { UsersService } from '../services/users.service';
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)

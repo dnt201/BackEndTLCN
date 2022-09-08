@@ -39,7 +39,7 @@ export class User implements ICreated, IModified, IDeleted {
     enum: Gender,
     default: Gender.Unknown,
   })
-  public role: Gender;
+  public gender: Gender;
 
   @CreateDateColumn()
   public dateCreated: Date;
