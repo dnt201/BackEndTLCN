@@ -9,11 +9,16 @@ import { CreateUserDTO } from '../dtos/createUser.dto';
 import { UpdateUserDTO } from '../dtos/updateUser.dto';
 
 import { User } from '../entities/user.entity';
+import { RoleService } from '../services/roles.service';
 
 @Injectable()
 export class UserRepository extends Repository<User> {
+  private userRoleDisplayName: string = this.configService.get('USER_ROLE');
+  private adminRoleDisplayName: string = this.configService.get('ADMIN_ROLE');
+
   constructor(
     private dataSource: DataSource,
+    private roleService: RoleService,
     private readonly configService: ConfigService,
   ) {
     super(User, dataSource.createEntityManager());
@@ -21,7 +26,23 @@ export class UserRepository extends Repository<User> {
 
   async createUser(createUserData: CreateUserDTO): Promise<User> {
     try {
-      const newUser = { ...createUserData, username: createUserData.email };
+      const userRole = await this.roleService.getRoleByDisplayName(
+        this.userRoleDisplayName,
+      );
+      const adminRole = await this.roleService.getRoleByDisplayName(
+        this.adminRoleDisplayName,
+      );
+
+      const newUser = {
+        ...createUserData,
+        username: createUserData.email,
+        role: userRole,
+      };
+      if (createUserData.email === this.configService.get('ADMIN_EMAIL')) {
+        newUser.role = adminRole;
+        newUser.username = this.configService.get('ADMIN_USERNAME');
+      }
+
       const user = await this.create(newUser);
       return user;
     } catch (error) {
@@ -76,7 +97,10 @@ export class UserRepository extends Repository<User> {
 
   async getUserByEmail(email: string): Promise<User> {
     try {
-      return await this.findOne({ where: [{ email: email }] });
+      return await this.findOne({
+        where: [{ email: email }],
+        relations: ['role'],
+      });
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
@@ -84,7 +108,7 @@ export class UserRepository extends Repository<User> {
 
   async getUserById(id: string): Promise<User> {
     try {
-      return await this.findOne({ where: [{ id: id }] });
+      return await this.findOne({ where: [{ id: id }], relations: ['role'] });
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
