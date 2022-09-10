@@ -24,6 +24,9 @@ import { AppService } from './startup.service';
 
         ADMIN_EMAIL: Joi.string().required(),
         ADMIN_USERNAME: Joi.string().required(),
+        ADMIN_PASSWORD: Joi.string().required(),
+
+        ADMIN_VIEW_PERMISSION: Joi.string().required(),
       }),
     }),
     DatabaseModule,

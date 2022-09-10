@@ -83,4 +83,24 @@ export class RoleRepository extends Repository<Role> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async getPermissionByRole(id: string) {
+    try {
+      const role = await this.findOne({
+        where: [{ id: id }],
+        relations: ['rolePermission', 'rolePermission.permission'],
+      });
+      const listPermission = role.rolePermission.map((rolePermission) => {
+        return rolePermission.permission;
+      });
+      const roleReturn = {
+        ...role,
+        rolePermission: undefined,
+        permission: listPermission,
+      };
+      return roleReturn;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }

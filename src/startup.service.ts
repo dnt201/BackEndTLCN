@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { CreateRoleDTO } from './modules/users/dtos/createRole.dto';
 import { RoleService } from './modules/users/services/roles.service';
 import { UsersService } from './modules/users/services/users.service';
+import { PermissionService } from './modules/users/services/permissions.service';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -13,11 +14,14 @@ export class AppService implements OnModuleInit {
   constructor(
     private readonly roleService: RoleService,
     private readonly usersService: UsersService,
+    private readonly permissionService: PermissionService,
     private readonly configService: ConfigService,
   ) {}
   async onModuleInit() {
     await this.createDefaultRole();
     await this.createDefaultUser();
+    await this.createAdminPermission();
+    await this.createDefaultRolePermission();
   }
 
   private async createDefaultRole() {
@@ -52,5 +56,48 @@ export class AppService implements OnModuleInit {
 
     if (!existUser) await this.usersService.createUser(adminAccount);
     this.logger.log('Default User Create Successfully');
+  }
+
+  private async createAdminPermission() {
+    const defaultAdminView = await this.configService.get(
+      'ADMIN_VIEW_PERMISSION',
+    );
+
+    const adminPermission = {
+      permission: defaultAdminView,
+      displayName: defaultAdminView,
+    };
+
+    const existedPermission =
+      await this.permissionService.getPermissionByDisplayName(
+        adminPermission.displayName,
+      );
+
+    if (!existedPermission)
+      await this.permissionService.createPermission(adminPermission);
+    this.logger.log('Default Permission Create Successfully');
+  }
+
+  private async createDefaultRolePermission() {
+    const defaultAdminView = await this.configService.get(
+      'ADMIN_VIEW_PERMISSION',
+    );
+    const adminRole = await this.configService.get('ADMIN_ROLE');
+    const role = await this.roleService.getRoleByDisplayName(adminRole);
+    const roleWithPermission = await this.roleService.getPermissionByRole(
+      role.id,
+    );
+    const permission = await this.permissionService.getPermissionByDisplayName(
+      defaultAdminView,
+    );
+
+    const listPermission = roleWithPermission.permission.map((permission) => {
+      return permission.id;
+    });
+
+    if (listPermission.indexOf(permission.id) === -1) {
+      await this.roleService.addPermissionToRole(role.id, permission.id);
+    }
+    this.logger.log('Default Role-Permission Create Successfully');
   }
 }

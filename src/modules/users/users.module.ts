@@ -10,11 +10,28 @@ import { RoleRepository } from './repositories/roles.repositoty';
 import { RoleService } from './services/roles.service';
 import { Role } from './entities/role.entity';
 import { RoleController } from './controllers/role.controller';
+import { Permission } from './entities/permission.entity';
+import { PermissionRepository } from './repositories/permission.repository';
+import { PermissionService } from './services/permissions.service';
+import { RolePermission } from './entities/role_permission.entity';
+import { RolePermissionRepository } from './repositories/rolePermission.repository';
+import { PermissionsController } from './controllers/permission.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Role]), ConfigModule],
-  providers: [UsersService, RoleService, UserRepository, RoleRepository],
-  controllers: [UsersController, RoleController],
-  exports: [UsersService, RoleService],
+  imports: [
+    TypeOrmModule.forFeature([User, Role, Permission, RolePermission]),
+    ConfigModule,
+  ],
+  providers: [
+    UsersService,
+    RoleService,
+    PermissionService,
+    UserRepository,
+    RoleRepository,
+    PermissionRepository,
+    RolePermissionRepository,
+  ],
+  controllers: [UsersController, RoleController, PermissionsController],
+  exports: [UsersService, RoleService, PermissionService],
 })
 export class UsersModule {}

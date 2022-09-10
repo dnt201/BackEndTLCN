@@ -8,15 +8,14 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { RolePermission } from './role_permission.entity';
-import { User } from './user.entity';
 
-@Entity('Role')
-export class Role implements IDeleted {
+@Entity('Permission')
+export class Permission implements IDeleted {
   @PrimaryGeneratedColumn('uuid')
   public id?: string;
 
   @Column({ unique: true })
-  public role: string;
+  public permission: string;
 
   @Column({ unique: true })
   public displayName: string;
@@ -29,12 +28,9 @@ export class Role implements IDeleted {
   @Exclude()
   public dateDeleted: Date;
 
-  @OneToMany(() => User, (user: User) => user.role)
-  public user: User[];
-
   @OneToMany(
     () => RolePermission,
-    (rolePermission: RolePermission) => rolePermission.role,
+    (rolePermission: RolePermission) => rolePermission.permission,
   )
   public rolePermission: RolePermission[];
 }

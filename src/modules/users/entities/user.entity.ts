@@ -54,7 +54,7 @@ export class User implements ICreated, IModified, IDeleted {
   @Exclude()
   public dateModified: Date;
 
-  @Column({ default: 'true' })
+  @Column({ default: 'false' })
   @Index()
   @Exclude()
   public deleted: boolean;
