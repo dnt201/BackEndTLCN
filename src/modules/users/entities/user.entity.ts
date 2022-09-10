@@ -4,6 +4,8 @@ import {
   DeleteDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -13,6 +15,7 @@ import { IModified } from 'src/common/model/IModified.interface';
 import { IDeleted } from 'src/common/model/IDeleted.interface';
 import { Gender } from 'src/common/constants/gender.constant';
 import { Exclude } from 'class-transformer';
+import { Role } from './role.entity';
 
 @Entity('User')
 export class User implements ICreated, IModified, IDeleted {
@@ -51,7 +54,7 @@ export class User implements ICreated, IModified, IDeleted {
   @Exclude()
   public dateModified: Date;
 
-  @Column({ default: 'true' })
+  @Column({ default: 'false' })
   @Index()
   @Exclude()
   public deleted: boolean;
@@ -59,4 +62,9 @@ export class User implements ICreated, IModified, IDeleted {
   @DeleteDateColumn()
   @Exclude()
   public dateDeleted: Date;
+
+  @ManyToOne(() => Role)
+  @ManyToOne(() => Role)
+  @JoinColumn()
+  public role: Role;
 }

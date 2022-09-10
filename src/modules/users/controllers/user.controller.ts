@@ -18,7 +18,7 @@ export class UsersController {
     return await this.usersService.getAllUsers();
   }
 
-  @Get('/all/deleted')
+  @Get('/deleted')
   async getAllDeleteUsers() {
     return await this.usersService.getAllDeleteUsers();
   }
