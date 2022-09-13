@@ -38,13 +38,10 @@ export class PermissionRepository extends Repository<Permission> {
 
   async deletePermission(id: string) {
     try {
-      const existedPermission = await this.getPermissionById(id);
-      if (!existedPermission)
-        throw new NotFoundException(`Not found permisison with id: ${id}`);
-
-      await this.update(id, { ...existedPermission, deleted: true });
-      await this.softDelete(id);
-
+      const deletedResponse = await this.delete(id);
+      if (!deletedResponse.affected) {
+        throw new NotFoundException(`Permission with id: ${id} does not exist`);
+      }
       return true;
     } catch (error) {
       if (error.code === HttpStatus.NOT_FOUND)

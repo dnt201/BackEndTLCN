@@ -41,11 +41,6 @@ export class PermissionService {
   }
 
   async deletePermission(id: string) {
-    // const roleUsePermission =
-    //   await this.permissionRepository.countRoleUsePermission(id);
-    // if (roleUsePermission > 0)
-    //   throw new BadRequestException(`Cannot delete permission with id: ${id}`);
-    // else
     return await this.permissionRepository.deletePermission(id);
   }
 
