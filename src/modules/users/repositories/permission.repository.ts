@@ -40,7 +40,7 @@ export class PermissionRepository extends Repository<Permission> {
     try {
       const existedPermission = await this.getPermissionById(id);
       if (!existedPermission)
-        throw new NotFoundException(`Permisison with id: ${id} does not exist`);
+        throw new NotFoundException(`Not found permisison with id: ${id}`);
 
       await this.update(id, { ...existedPermission, deleted: true });
       await this.softDelete(id);

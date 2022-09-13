@@ -78,7 +78,7 @@ export class RoleRepository extends Repository<Role> {
         where: [{ id: id }],
         relations: ['user'],
       });
-      return role ? role.user.length : -1;
+      return role.user.length;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

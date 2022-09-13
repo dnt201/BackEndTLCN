@@ -27,6 +27,10 @@ import { AppService } from './startup.service';
         ADMIN_PASSWORD: Joi.string().required(),
 
         ADMIN_VIEW_PERMISSION: Joi.string().required(),
+
+        JWT_SECRET: Joi.string().required(),
+        JWT_ACCESS_EXPIRATION_TIME: Joi.string().required(),
+        JWT_REFRESH_EXPIRATION_TIME: Joi.string().required(),
       }),
     }),
     DatabaseModule,

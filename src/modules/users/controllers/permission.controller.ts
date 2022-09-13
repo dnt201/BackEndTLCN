@@ -41,18 +41,24 @@ export class PermissionsController {
       id,
     );
 
-    if (!existedPermission) {
-      throw new NotFoundException(`Permission with id ${id} not found`);
-    } else {
-      return await this.permissionService.updatePermission(
-        id,
-        updatePermissionData,
-      );
-    }
+    if (!existedPermission)
+      throw new NotFoundException(`Not found permission with id ${id}`);
+
+    return await this.permissionService.updatePermission(
+      id,
+      updatePermissionData,
+    );
   }
 
   @Delete('delete/:id')
   async deletePermission(@Param() { id }) {
+    const existedPermission = await this.permissionService.getPermissionById(
+      id,
+    );
+
+    if (!existedPermission)
+      throw new NotFoundException(`Not found permission with id ${id}`);
+
     return await this.permissionService.deletePermission(id);
   }
 }
