@@ -31,7 +31,7 @@ export class RolePermissionRepository extends Repository<RolePermission> {
     deleteRolePermissionData: DeleteRolePermissionDTO,
   ) {
     try {
-      const deletedResponse = await this.softDelete(deleteRolePermissionData);
+      const deletedResponse = await this.delete(deleteRolePermissionData);
       if (!deletedResponse.affected) {
         throw new BadRequestException(`Role permission does not exist`);
       }

@@ -1,16 +1,8 @@
-import { Exclude } from 'class-transformer';
-import { IDeleted } from 'src/common/model/IDeleted.interface';
-import {
-  Column,
-  DeleteDateColumn,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { RolePermission } from './role_permission.entity';
 
 @Entity('Permission')
-export class Permission implements IDeleted {
+export class Permission {
   @PrimaryGeneratedColumn('uuid')
   public id?: string;
 
@@ -19,14 +11,6 @@ export class Permission implements IDeleted {
 
   @Column({ unique: true })
   public displayName: string;
-
-  @Column({ default: false })
-  @Exclude()
-  public deleted: boolean;
-
-  @DeleteDateColumn()
-  @Exclude()
-  public dateDeleted: Date;
 
   @OneToMany(
     () => RolePermission,

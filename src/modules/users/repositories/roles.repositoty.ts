@@ -35,7 +35,7 @@ export class RoleRepository extends Repository<Role> {
 
   async deleteRole(id: string) {
     try {
-      const deletedResponse = await this.softDelete(id);
+      const deletedResponse = await this.delete(id);
       if (!deletedResponse.affected) {
         throw new NotFoundException(`Role with id: ${id} does not exist`);
       }

@@ -48,9 +48,12 @@ export class RoleService {
 
   async deleteRole(id: string) {
     const userCount = await this.roleRepository.countUserByRole(id);
-    if (userCount === 0) return await this.roleRepository.deleteRole(id);
-    else {
-      throw new BadRequestException('Can not delete this role');
+    if (userCount === 0) {
+      return await this.roleRepository.deleteRole(id);
+    } else {
+      throw new BadRequestException(
+        'Can not delete this role because some users are in this role',
+      );
     }
   }
 
