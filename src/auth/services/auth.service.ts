@@ -4,11 +4,13 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 
 import { RegisterDTO } from '../dtos/register.dto';
 import { UsersService } from 'src/modules/users/services/users.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   constructor(
+    private readonly jwtService: JwtService,
     private readonly userService: UsersService,
     private readonly configService: ConfigService,
   ) {}
@@ -49,10 +51,50 @@ export class AuthService {
     }
   }
 
+  async removeRefreshToken(id: string) {
+    await this.userService.removeRefreshToken(id);
+  }
+
+  public async getCookieWithJwtToken(userId: string) {
+    const userData = await this.getUserData(userId);
+    const payload = userData;
+    const token = this.jwtService.sign(payload, {
+      expiresIn: `${this.configService.get('JWT_ACCESS_EXPIRATION_TIME')}s`,
+    });
+    return token;
+  }
+
+  public async getCookieWithJwtRefreshToken(userId: string) {
+    const payload = { id: userId };
+    const token = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_TOKEN_SECRET'),
+      expiresIn: `${this.configService.get('JWT_REFRESH_EXPIRATION_TIME')}s`,
+    });
+
+    await this.userService.setCurrentRefreshToken(token, userId);
+
+    const cookie = `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get(
+      'JWT_REFRESH_EXPIRATION_TIME',
+    )}s`;
+    return {
+      cookie,
+      token,
+    };
+  }
+
+  public getCookiesForLogOut() {
+    return 'Refresh=; Value =; HttpOnly; Path=/; Max-Age=0';
+  }
+
   private async verifyPassword(password: string, hashedPassword: string) {
     const isPasswordMatching = await bcrypt.compare(password, hashedPassword);
     if (!isPasswordMatching) {
       throw new UnauthorizedException('Wrong credentials provided');
     }
+  }
+
+  private async getUserData(id: string) {
+    const user = await this.userService.getUserData(id);
+    return user;
   }
 }

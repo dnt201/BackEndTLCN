@@ -2,6 +2,7 @@ import { UpdateRoleDTO } from './../dtos/updateRole.dto';
 import {
   ClassSerializerInterceptor,
   Controller,
+  NotFoundException,
   UseInterceptors,
 } from '@nestjs/common';
 import { Body, Delete, Get, Param, Post, Put } from '@nestjs/common/decorators';
@@ -32,11 +33,17 @@ export class RoleController {
     @Param() { id },
     @Body() roleData: UpdateRoleDTO,
   ): Promise<Role> {
+    const existedRole = await this.roleService.getRoleById(id);
+    if (!existedRole)
+      throw new NotFoundException(`Not found role with id: ${id}`);
     return await this.roleService.updateRole(id, roleData);
   }
 
   @Delete('delete/:id')
   async deleteRole(@Param() { id }) {
+    const existedRole = await this.roleService.getRoleById(id);
+    if (!existedRole)
+      throw new NotFoundException(`Not found role with id: ${id}`);
     return await this.roleService.deleteRole(id);
   }
 

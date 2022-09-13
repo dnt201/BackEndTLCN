@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common';
 
 import { CreateRoleDTO } from '../dtos/createRole.dto';
@@ -50,9 +49,7 @@ export class RoleService {
   async deleteRole(id: string) {
     const userCount = await this.roleRepository.countUserByRole(id);
     if (userCount === 0) return await this.roleRepository.deleteRole(id);
-    else if (userCount === -1) {
-      throw new NotFoundException(`Not found role with id: ${id}`);
-    } else {
+    else {
       throw new BadRequestException('Can not delete this role');
     }
   }
