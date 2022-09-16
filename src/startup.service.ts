@@ -6,17 +6,50 @@ import { CreateRoleDTO } from './modules/users/dtos/createRole.dto';
 import { RoleService } from './modules/users/services/roles.service';
 import { UsersService } from './modules/users/services/users.service';
 import { PermissionService } from './modules/users/services/permissions.service';
+import {
+  Permission_Permission,
+  Role_Permission,
+  User_Permission,
+} from './modules/users/permission/permission';
+import { ChangeEnumToArray } from './utils/changeEnumToArray';
+import { CreatePermissionDTO } from './modules/users/dtos/createPermission.dto';
 
 @Injectable()
 export class AppService implements OnModuleInit {
   private readonly logger = new Logger(AppService.name);
+
+  user: CreateRoleDTO;
+  admin: CreateRoleDTO;
+  defaultPassword: string;
+  defaultAdminView: string;
+  adminPermission: CreatePermissionDTO[];
 
   constructor(
     private readonly roleService: RoleService,
     private readonly usersService: UsersService,
     private readonly permissionService: PermissionService,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    this.defaultPassword = this.configService.get('ADMIN_PASSWORD');
+    this.defaultAdminView = this.configService.get('ADMIN_VIEW_PERMISSION');
+    this.admin = {
+      role: this.configService.get('ADMIN_ROLE'),
+      displayName: this.configService.get('ADMIN_ROLE'),
+    };
+    this.user = {
+      role: this.configService.get('USER_ROLE'),
+      displayName: this.configService.get('USER_ROLE'),
+    };
+    this.adminPermission = [
+      {
+        permission: this.defaultAdminView,
+        displayName: this.defaultAdminView,
+      },
+      ...ChangeEnumToArray(Role_Permission),
+      ...ChangeEnumToArray(Permission_Permission),
+      ...ChangeEnumToArray(User_Permission),
+    ];
+  }
   async onModuleInit() {
     await this.createDefaultRole();
     await this.createDefaultUser();
@@ -25,25 +58,16 @@ export class AppService implements OnModuleInit {
   }
 
   private async createDefaultRole() {
-    const adminRole: CreateRoleDTO = {
-      role: this.configService.get('ADMIN_ROLE'),
-      displayName: this.configService.get('ADMIN_ROLE'),
-    };
-    if (!(await this.roleService.getRoleByDisplayName(adminRole.displayName)))
-      await this.roleService.createRole(adminRole);
+    if (!(await this.roleService.getRoleByDisplayName(this.admin.displayName)))
+      await this.roleService.createRole(this.admin);
 
-    const userRole: CreateRoleDTO = {
-      role: this.configService.get('USER_ROLE'),
-      displayName: this.configService.get('USER_ROLE'),
-    };
-    if (!(await this.roleService.getRoleByDisplayName(userRole.displayName)))
-      await this.roleService.createRole(userRole);
+    if (!(await this.roleService.getRoleByDisplayName(this.user.displayName)))
+      await this.roleService.createRole(this.user);
     this.logger.log('Default Role Create Successfully');
   }
 
   private async createDefaultUser() {
-    const defaultPassword = await this.configService.get('ADMIN_PASSWORD');
-    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    const hashedPassword = await bcrypt.hash(this.defaultPassword, 10);
 
     const adminAccount = {
       email: this.configService.get('ADMIN_EMAIL'),
@@ -59,45 +83,50 @@ export class AppService implements OnModuleInit {
   }
 
   private async createAdminPermission() {
-    const defaultAdminView = await this.configService.get(
-      'ADMIN_VIEW_PERMISSION',
+    await Promise.all(
+      this.adminPermission.map(async (permission) => {
+        const existedPermission =
+          await this.permissionService.getPermissionByDisplayName(
+            permission.displayName,
+          );
+
+        if (!existedPermission)
+          await this.permissionService.createPermission(permission);
+      }),
     );
-
-    const adminPermission = {
-      permission: defaultAdminView,
-      displayName: defaultAdminView,
-    };
-
-    const existedPermission =
-      await this.permissionService.getPermissionByDisplayName(
-        adminPermission.displayName,
-      );
-
-    if (!existedPermission)
-      await this.permissionService.createPermission(adminPermission);
     this.logger.log('Default Permission Create Successfully');
   }
 
   private async createDefaultRolePermission() {
-    const defaultAdminView = await this.configService.get(
-      'ADMIN_VIEW_PERMISSION',
+    const role = await this.roleService.getRoleByDisplayName(
+      this.admin.displayName,
     );
-    const adminRole = await this.configService.get('ADMIN_ROLE');
-    const role = await this.roleService.getRoleByDisplayName(adminRole);
     const roleWithPermission = await this.roleService.getPermissionByRole(
       role.id,
     );
-    const permission = await this.permissionService.getPermissionByDisplayName(
-      defaultAdminView,
+
+    const listPermission = await Promise.all(
+      this.adminPermission.map(async (permission) => {
+        const perm = await this.permissionService.getPermissionByDisplayName(
+          permission.displayName,
+        );
+        return perm;
+      }),
     );
 
-    const listPermission = roleWithPermission.permission.map((permission) => {
-      return permission.id;
-    });
+    await Promise.all(
+      listPermission.map(async (newPermission) => {
+        const listPermission = roleWithPermission.permission.map(
+          (permission) => {
+            return permission.id;
+          },
+        );
 
-    if (listPermission.indexOf(permission.id) === -1) {
-      await this.roleService.addPermissionToRole(role.id, permission.id);
-    }
+        if (listPermission.indexOf(newPermission.id) === -1) {
+          await this.roleService.addPermissionToRole(role.id, newPermission.id);
+        }
+      }),
+    );
     this.logger.log('Default Role-Permission Create Successfully');
   }
 }
