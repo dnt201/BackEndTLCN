@@ -78,7 +78,11 @@ export class AppService implements OnModuleInit {
       adminAccount.email,
     );
 
-    if (!existUser) await this.usersService.createUser(adminAccount);
+    if (!existUser) {
+      await this.usersService.createUser(adminAccount);
+      const user = await this.usersService.getUserByEmail(adminAccount.email);
+      await this.usersService.activateAccount(user.token);
+    }
     this.logger.log('Default User Create Successfully');
   }
 

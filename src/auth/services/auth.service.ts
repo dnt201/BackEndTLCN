@@ -86,6 +86,10 @@ export class AuthService {
     return 'Refresh=; Value =; HttpOnly; Path=/; Max-Age=0';
   }
 
+  async activateAccount(token: string) {
+    return this.userService.activateAccount(token);
+  }
+
   private async verifyPassword(password: string, hashedPassword: string) {
     const isPasswordMatching = await bcrypt.compare(password, hashedPassword);
     if (!isPasswordMatching) {

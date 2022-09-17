@@ -113,4 +113,12 @@ export class UserRepository extends Repository<User> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async getUserByToken(token: string): Promise<User> {
+    try {
+      return await this.findOne({ where: [{ token: token }] });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }

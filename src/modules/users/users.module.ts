@@ -16,11 +16,13 @@ import { PermissionService } from './services/permissions.service';
 import { RolePermission } from './entities/role_permission.entity';
 import { RolePermissionRepository } from './repositories/rolePermission.repository';
 import { PermissionsController } from './controllers/permission.controller';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Role, Permission, RolePermission]),
     ConfigModule,
+    EmailModule,
   ],
   providers: [
     UsersService,
