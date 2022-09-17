@@ -60,6 +60,18 @@ export class User implements ICreated, IModified, IDeleted {
   public deleted: boolean;
 
   @Column({ nullable: true })
+  @Index()
+  @Exclude()
+  public token: string;
+
+  @Column({ nullable: true })
+  public dateExpires: Date;
+
+  @Column({ default: 'false' })
+  @Exclude()
+  public isActive: boolean;
+
+  @Column({ nullable: true })
   @Exclude()
   public currentHashedRefreshToken: string;
 

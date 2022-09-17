@@ -31,6 +31,10 @@ import { AppService } from './startup.service';
         JWT_SECRET: Joi.string().required(),
         JWT_ACCESS_EXPIRATION_TIME: Joi.string().required(),
         JWT_REFRESH_EXPIRATION_TIME: Joi.string().required(),
+
+        EMAIL_SERVICE: Joi.string().required(),
+        EMAIL_USER: Joi.string().required(),
+        EMAIL_PASSWORD: Joi.string().required(),
       }),
     }),
     DatabaseModule,

@@ -1,9 +1,11 @@
 import {
+  BadRequestException,
   Body,
   ClassSerializerInterceptor,
   Controller,
   Get,
   HttpCode,
+  Param,
   Post,
   Req,
   UseGuards,
@@ -32,6 +34,12 @@ export class AuthController {
   @Post('login')
   async logIn(@Req() request: RequestWithUser) {
     const { user } = request;
+    if (user.token !== null) {
+      throw new BadRequestException(
+        `Please confirm email before login to the system`,
+      );
+    }
+
     const accessTokenCookie = await this.authService.getCookieWithJwtToken(
       user.id,
     );
@@ -62,5 +70,10 @@ export class AuthController {
     );
 
     return accessTokenCookie;
+  }
+
+  @Post('/activate/:token')
+  async activateAccount(@Param() { token }) {
+    return await this.authService.activateAccount(token);
   }
 }
