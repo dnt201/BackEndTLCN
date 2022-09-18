@@ -12,6 +12,7 @@ import { UserRepository } from '../repositories/users.repository';
 import { UpdateUserDTO } from '../dtos/updateUser.dto';
 import { RoleService } from './roles.service';
 import EmailService from 'src/modules/email/email.service';
+import { UpdatePasswordDTO } from '../dtos/updatePassword.dto';
 
 @Injectable()
 export class UsersService {
@@ -69,6 +70,30 @@ export class UsersService {
       ...updateData,
     });
     return updateUser;
+  }
+
+  async updatePassword(userId: string, updatePasswordData: UpdatePasswordDTO) {
+    const userExist = await this.getUserById(userId);
+
+    if (updatePasswordData.newPassword !== updatePasswordData.confirmPassword)
+      throw new BadRequestException('Confirm Password does not match');
+
+    await this.verifyPassword(
+      updatePasswordData.oldPassword,
+      userExist.password,
+    );
+    const hashedPassword = await bcrypt.hash(
+      updatePasswordData.newPassword,
+      10,
+    );
+
+    const user = {
+      ...userExist,
+      password: hashedPassword,
+    };
+
+    await this.userRepository.update(userId, user);
+    return await this.getUserById(userId);
   }
 
   async activateAccount(token: string) {
@@ -164,5 +189,12 @@ export class UsersService {
     const endTime = new Date();
     endTime.setDate(endTime.getDate() + 1);
     return endTime;
+  }
+
+  private async verifyPassword(password: string, hashedPassword: string) {
+    const isMatchingPassword = await bcrypt.compare(password, hashedPassword);
+    if (!isMatchingPassword) {
+      throw new BadRequestException('Wrong password');
+    }
   }
 }
