@@ -65,6 +65,7 @@ export class User implements ICreated, IModified, IDeleted {
   public token: string;
 
   @Column({ nullable: true })
+  @Exclude()
   public dateExpires: Date;
 
   @Column({ default: 'false' })

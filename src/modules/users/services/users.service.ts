@@ -38,8 +38,36 @@ export class UsersService {
     return newUser;
   }
 
-  async updateUser(id: string, updateUserData: UpdateUserDTO): Promise<User> {
-    const updateUser = await this.userRepository.updateUser(id, updateUserData);
+  async updateUserInfoWithAdmin(id: string, updateData: UpdateUserDTO) {
+    if (updateData.email) {
+      const userWithNewEmail = await this.getUserByEmail(updateData.email);
+      if (userWithNewEmail && userWithNewEmail.id !== id) {
+        throw new BadRequestException(
+          `Mail ${updateData.email} is already in use. Try another mail`,
+        );
+      }
+    }
+
+    const userData = await this.userRepository.getUserById(id);
+    const updateUser = await this.userRepository.updateUser(id, {
+      ...userData,
+      ...updateData,
+    });
+    return updateUser;
+  }
+
+  async updateUserInfo(userAccount: User, updateData: UpdateUserDTO) {
+    const userWithNewEmail = await this.getUserByEmail(updateData.email);
+    if (userWithNewEmail && userWithNewEmail.id !== userAccount.id) {
+      throw new BadRequestException(
+        `Mail ${updateData.email} is already in use. Try another mail`,
+      );
+    }
+
+    const updateUser = await this.userRepository.updateUser(userAccount.id, {
+      ...userAccount,
+      ...updateData,
+    });
     return updateUser;
   }
 

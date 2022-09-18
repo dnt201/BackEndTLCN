@@ -16,6 +16,7 @@ export enum Permission_Permission {
 }
 
 export enum User_Permission {
+  UpdateUserInfo = 'Update User Infomation',
   ViewAllUser = 'View All User',
   ViewAllDeleteUser = 'View All Delete User',
 }
