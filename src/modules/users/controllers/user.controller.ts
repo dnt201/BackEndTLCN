@@ -1,4 +1,3 @@
-import { Permission } from './../entities/permission.entity';
 import {
   Body,
   ClassSerializerInterceptor,
@@ -6,6 +5,7 @@ import {
   Get,
   NotFoundException,
   Param,
+  Post,
   Put,
   Req,
   UseGuards,
@@ -17,9 +17,8 @@ import { UsersService } from '../services/users.service';
 import { User_Permission as ListPermission } from '../permission/permission';
 import { PermissionGuard } from 'src/auth/guards/permission.guard';
 import { UpdateUserDTO } from '../dtos/updateUser.dto';
-import RequestWithUser from 'src/auth/interfaces/requestWithUser.interface';
 import JwtAuthenticationGuard from 'src/auth/guards/jwt-authentication.guard';
-import { use } from 'passport';
+import { UpdatePasswordDTO } from '../dtos/updatePassword.dto';
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -51,6 +50,16 @@ export class UsersController {
     user.role = undefined;
     user.permission = undefined;
     return await this.usersService.updateUserInfo(user, userInfo);
+  }
+
+  @UseGuards(JwtAuthenticationGuard)
+  @Post('/update/password')
+  async updatePassword(
+    @Req() request,
+    @Body() updatePassword: UpdatePasswordDTO,
+  ) {
+    const userId = request.user.id;
+    return await this.usersService.updatePassword(userId, updatePassword);
   }
 
   @Get('/deleted')
