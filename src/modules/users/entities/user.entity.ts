@@ -6,6 +6,7 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -16,6 +17,7 @@ import { IDeleted } from 'src/common/model/IDeleted.interface';
 import { Gender } from 'src/common/constants/gender.constant';
 import { Exclude } from 'class-transformer';
 import { Role } from './role.entity';
+import { UserFollow } from './userFollow.entity';
 
 @Entity('User')
 export class User implements ICreated, IModified, IDeleted {
@@ -81,7 +83,15 @@ export class User implements ICreated, IModified, IDeleted {
   public dateDeleted: Date;
 
   @ManyToOne(() => Role)
-  @ManyToOne(() => Role)
   @JoinColumn()
   public role: Role;
+
+  @OneToMany(
+    () => UserFollow,
+    (userFollow: UserFollow) => userFollow.userFollow,
+  )
+  public userFollows: User[];
+
+  @OneToMany(() => UserFollow, (userFollow: UserFollow) => userFollow.follower)
+  public followers: User[];
 }

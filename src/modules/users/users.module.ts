@@ -17,6 +17,7 @@ import { RolePermission } from './entities/role_permission.entity';
 import { RolePermissionRepository } from './repositories/rolePermission.repository';
 import { PermissionsController } from './controllers/permission.controller';
 import { EmailModule } from '../email/email.module';
+import { UserFollowRepository } from './repositories/userFollow.repository';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { EmailModule } from '../email/email.module';
     RoleRepository,
     PermissionRepository,
     RolePermissionRepository,
+    UserFollowRepository,
   ],
   controllers: [UsersController, RoleController, PermissionsController],
   exports: [UsersService, RoleService, PermissionService],
