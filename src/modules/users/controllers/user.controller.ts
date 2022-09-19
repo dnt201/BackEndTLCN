@@ -19,6 +19,7 @@ import { PermissionGuard } from 'src/auth/guards/permission.guard';
 import { UpdateUserDTO } from '../dtos/updateUser.dto';
 import JwtAuthenticationGuard from 'src/auth/guards/jwt-authentication.guard';
 import { UpdatePasswordDTO } from '../dtos/updatePassword.dto';
+import { UserFollowUserDTO } from '../dtos/userFollowUser.dto';
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -74,5 +75,47 @@ export class UsersController {
     const user = await this.usersService.getUserById(id);
     if (!user) throw new NotFoundException(`Not found user with id: ${id}`);
     return user;
+  }
+
+  @Post('follow')
+  @UseGuards(JwtAuthenticationGuard)
+  async userFollow(@Req() request, @Body() data: UserFollowUserDTO) {
+    const userFollow = await this.usersService.getUserById(data.userFollowId);
+    if (!userFollow)
+      throw new NotFoundException(
+        `Not found user with id ${data.userFollowId}`,
+      );
+
+    return await this.usersService.userFollowUser(
+      request.user.id,
+      data.userFollowId,
+    );
+  }
+
+  @Post('unfollow')
+  @UseGuards(JwtAuthenticationGuard)
+  async userUnfollow(@Req() request, @Body() data: UserFollowUserDTO) {
+    const userFollow = await this.usersService.getUserById(data.userFollowId);
+    if (!userFollow)
+      throw new NotFoundException(
+        `Not found user with id ${data.userFollowId}`,
+      );
+
+    return await this.usersService.userUnfollowUser(
+      request.user.id,
+      data.userFollowId,
+    );
+  }
+
+  @Get('/my/follow')
+  @UseGuards(JwtAuthenticationGuard)
+  async getMyFollowUser(@Req() request) {
+    return await this.usersService.getMyFollowUser(request.user.id);
+  }
+
+  @Get('/my/follower')
+  @UseGuards(JwtAuthenticationGuard)
+  async getMyFollower(@Req() request) {
+    return await this.usersService.getMyFollower(request.user.id);
   }
 }

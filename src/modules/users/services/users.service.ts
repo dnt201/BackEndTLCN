@@ -13,10 +13,12 @@ import { UpdateUserDTO } from '../dtos/updateUser.dto';
 import { RoleService } from './roles.service';
 import EmailService from 'src/modules/email/email.service';
 import { UpdatePasswordDTO } from '../dtos/updatePassword.dto';
+import { UserFollowRepository } from './../repositories/userFollow.repository';
 
 @Injectable()
 export class UsersService {
   constructor(
+    private readonly userFollowRepository: UserFollowRepository,
     private readonly userRepository: UserRepository,
     private readonly emailService: EmailService,
     private readonly roleService: RoleService,
@@ -178,6 +180,25 @@ export class UsersService {
     if (isRefreshTokenMatching) {
       return user;
     }
+  }
+
+  async userFollowUser(userId: string, userFollowId: string) {
+    return await this.userFollowRepository.userFollow({ userId, userFollowId });
+  }
+
+  async userUnfollowUser(userId: string, userFollowId: string) {
+    return await this.userFollowRepository.userUnfollow({
+      userId,
+      userFollowId,
+    });
+  }
+
+  async getMyFollowUser(userId: string) {
+    return await this.userFollowRepository.getMyFollowUser(userId);
+  }
+
+  async getMyFollower(userId: string) {
+    return await this.userFollowRepository.getMyFollower(userId);
   }
 
   private getActivateToken() {
