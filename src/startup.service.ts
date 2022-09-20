@@ -13,6 +13,7 @@ import {
 } from './modules/users/permission/permission';
 import { ChangeEnumToArray } from './utils/changeEnumToArray';
 import { CreatePermissionDTO } from './modules/users/dtos/createPermission.dto';
+import { PostTag_Permission } from './modules/posts/permission/permission';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -48,6 +49,7 @@ export class AppService implements OnModuleInit {
       ...ChangeEnumToArray(Role_Permission),
       ...ChangeEnumToArray(Permission_Permission),
       ...ChangeEnumToArray(User_Permission),
+      ...ChangeEnumToArray(PostTag_Permission),
     ];
   }
   async onModuleInit() {
