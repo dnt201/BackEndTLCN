@@ -19,12 +19,7 @@ export class RoleService {
   ) {}
 
   async createRole(createRoleData: CreateRoleDTO) {
-    const existedRole = await this.roleRepository.find({
-      where: [
-        { displayName: createRoleData.displayName },
-        { role: createRoleData.role },
-      ],
-    });
+    const existedRole = await this.roleRepository.getRoleByData(createRoleData);
 
     if (existedRole.length > 0) {
       if (existedRole[0].role === createRoleData.role)
@@ -39,6 +34,21 @@ export class RoleService {
   }
 
   async updateRole(id: string, updateRoleData: UpdateRoleDTO) {
+    const existedRole = await this.roleRepository.getRoleByData(updateRoleData);
+
+    if (existedRole.length > 0) {
+      existedRole.forEach((role) => {
+        if (role.id === id) {
+        } else if (role.role === updateRoleData.role) {
+          throw new BadRequestException(`Role value existed. Try another`);
+        } else {
+          throw new BadRequestException(
+            `Role display name existed. Try another`,
+          );
+        }
+      });
+    }
+
     const updatedRole = await this.roleRepository.updateRole(
       id,
       updateRoleData,

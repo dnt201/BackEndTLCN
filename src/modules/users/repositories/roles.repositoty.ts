@@ -72,6 +72,12 @@ export class RoleRepository extends Repository<Role> {
     }
   }
 
+  async getRoleByData(roleData: CreateRoleDTO) {
+    return await this.find({
+      where: [{ displayName: roleData.displayName }, { role: roleData.role }],
+    });
+  }
+
   async countUserByRole(id: string) {
     try {
       const role = await this.findOne({
