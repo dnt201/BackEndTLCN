@@ -66,6 +66,15 @@ export class PermissionRepository extends Repository<Permission> {
     }
   }
 
+  async getPermissionByData(permissionData: CreatePermissionDTO) {
+    return await this.find({
+      where: [
+        { displayName: permissionData.displayName },
+        { permission: permissionData.permission },
+      ],
+    });
+  }
+
   async getAllPermissions() {
     try {
       return await this.find({});

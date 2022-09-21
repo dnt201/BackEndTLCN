@@ -37,8 +37,7 @@ export class PostTagService {
 
     if (existPostTag.length > 0) {
       existPostTag.forEach((postTag) => {
-        if (JSON.stringify(postTag) === JSON.stringify(postTagWithId)) {
-          console.log('1');
+        if (postTag.id === id) {
         } else if (postTag.colorCode === postTagWithId.colorCode) {
           throw new BadRequestException(`Same color code. Try another color`);
         } else if (postTag.colorCode === postTagWithId.displayName) {

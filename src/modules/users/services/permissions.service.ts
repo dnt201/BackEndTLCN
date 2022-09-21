@@ -8,12 +8,8 @@ export class PermissionService {
   constructor(private readonly permissionRepository: PermissionRepository) {}
 
   async createPermission(createPermissionData: CreatePermissionDTO) {
-    const existedPermission = await this.permissionRepository.find({
-      where: [
-        { displayName: createPermissionData.displayName },
-        { permission: createPermissionData.permission },
-      ],
-    });
+    const existedPermission =
+      await this.permissionRepository.getPermissionByData(createPermissionData);
 
     if (existedPermission.length > 0) {
       if (existedPermission[0].permission === createPermissionData.permission)
@@ -34,6 +30,24 @@ export class PermissionService {
     id: string,
     updatePermissionData: UpdatePermissionDTO,
   ) {
+    const existedPermisison =
+      await this.permissionRepository.getPermissionByData(updatePermissionData);
+
+    if (existedPermisison.length > 0) {
+      existedPermisison.forEach((permission) => {
+        if (permission.id === id) {
+        } else if (permission.permission === updatePermissionData.permission) {
+          throw new BadRequestException(
+            `Permission value existed. Try another`,
+          );
+        } else {
+          throw new BadRequestException(
+            `Permission display name existed. Try another`,
+          );
+        }
+      });
+    }
+
     return await this.permissionRepository.updatePermission(
       id,
       updatePermissionData,
