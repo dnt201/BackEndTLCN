@@ -148,36 +148,6 @@ export class AppService implements OnModuleInit {
         key: 'ADMIN_EMAIL',
         value: 'service.teachingme@gmail.com',
       },
-      {
-        group: 'GENERAL',
-        key: 'ADMIN_USERNAME',
-        value: 'Admin',
-      },
-      {
-        group: 'GENERAL',
-        key: 'USER_ROLE',
-        value: 'User',
-      },
-      {
-        group: 'GENERAL',
-        key: 'ADMIN_ROLE',
-        value: 'Admin',
-      },
-      {
-        group: 'EMAIL',
-        key: 'EMAIL_SERVICE',
-        value: 'gmail',
-      },
-      {
-        group: 'EMAIL',
-        key: 'EMAIL_USER',
-        value: 'service.teachingme@gmail.com',
-      },
-      {
-        group: 'EMAIL',
-        key: 'EMAIL_PASSWORD',
-        value: 'tkqfbqjmhhzfircw',
-      },
     ];
 
     await Promise.all(
