@@ -7,6 +7,7 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { AppService } from './startup.service';
 import { PostModule } from './modules/posts/post.module';
+import { SettingModule } from './modules/settings/setting.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { PostModule } from './modules/posts/post.module';
     UsersModule,
     AuthModule,
     PostModule,
+    SettingModule,
   ],
   controllers: [],
   providers: [AppService],

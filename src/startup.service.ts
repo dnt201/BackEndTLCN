@@ -14,6 +14,8 @@ import {
 import { ChangeEnumToArray } from './utils/changeEnumToArray';
 import { CreatePermissionDTO } from './modules/users/dtos/createPermission.dto';
 import { PostTag_Permission } from './modules/posts/permission/permission';
+import { Setting_Permission } from './modules/settings/permission/setting.permission';
+import { SettingService } from './modules/settings/services/setting.service';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -29,6 +31,7 @@ export class AppService implements OnModuleInit {
     private readonly roleService: RoleService,
     private readonly usersService: UsersService,
     private readonly permissionService: PermissionService,
+    private readonly settingService: SettingService,
     private readonly configService: ConfigService,
   ) {
     this.defaultPassword = this.configService.get('ADMIN_PASSWORD');
@@ -50,6 +53,7 @@ export class AppService implements OnModuleInit {
       ...ChangeEnumToArray(Permission_Permission),
       ...ChangeEnumToArray(User_Permission),
       ...ChangeEnumToArray(PostTag_Permission),
+      ...ChangeEnumToArray(Setting_Permission),
     ];
   }
   async onModuleInit() {
@@ -57,6 +61,7 @@ export class AppService implements OnModuleInit {
     await this.createDefaultUser();
     await this.createAdminPermission();
     await this.createDefaultRolePermission();
+    await this.createSettingDefault();
   }
 
   private async createDefaultRole() {
@@ -134,5 +139,27 @@ export class AppService implements OnModuleInit {
       }),
     );
     this.logger.log('Default Role-Permission Create Successfully');
+  }
+
+  private async createSettingDefault() {
+    const listSetting = [
+      {
+        group: 'GENERAL',
+        key: 'ADMIN_EMAIL',
+        value: 'service.teachingme@gmail.com',
+      },
+    ];
+
+    await Promise.all(
+      listSetting.map(async (setting) => {
+        const existSetting = await this.settingService.getSettingByKeyAndGroup(
+          setting.key,
+          setting.group,
+        );
+        if (!existSetting) await this.settingService.createSetting(setting);
+      }),
+    );
+
+    this.logger.log('Default Setting Create Successfully');
   }
 }
