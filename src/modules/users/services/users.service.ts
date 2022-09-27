@@ -14,6 +14,8 @@ import { RoleService } from './roles.service';
 import EmailService from 'src/modules/email/email.service';
 import { UpdatePasswordDTO } from '../dtos/updatePassword.dto';
 import { UserFollowRepository } from './../repositories/userFollow.repository';
+import { FileDTO } from 'src/modules/files/dtos/file.dto';
+import { FileService } from 'src/modules/files/services/file.service';
 
 @Injectable()
 export class UsersService {
@@ -22,6 +24,7 @@ export class UsersService {
     private readonly userRepository: UserRepository,
     private readonly emailService: EmailService,
     private readonly roleService: RoleService,
+    private readonly fileService: FileService,
   ) {}
 
   async createUser(createUserData: CreateUserDTO): Promise<User> {
@@ -199,6 +202,13 @@ export class UsersService {
 
   async getMyFollower(userId: string) {
     return await this.userFollowRepository.getMyFollower(userId);
+  }
+
+  async addAvatar(userId: string, fileData: FileDTO) {
+    const avatar = await this.fileService.saveLocalFileData(fileData);
+    await this.userRepository.update(userId, {
+      avatarId: avatar.id,
+    });
   }
 
   private getActivateToken() {

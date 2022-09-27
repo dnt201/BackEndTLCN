@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { AppService } from './startup.service';
 import { PostModule } from './modules/posts/post.module';
 import { SettingModule } from './modules/settings/setting.module';
+import { FileModule } from './modules/files/file.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { SettingModule } from './modules/settings/setting.module';
     AuthModule,
     PostModule,
     SettingModule,
+    FileModule,
   ],
   controllers: [],
   providers: [AppService],

@@ -18,12 +18,16 @@ import { RolePermissionRepository } from './repositories/rolePermission.reposito
 import { PermissionsController } from './controllers/permission.controller';
 import { EmailModule } from '../email/email.module';
 import { UserFollowRepository } from './repositories/userFollow.repository';
+import { FileModule } from '../files/file.module';
+import { SettingModule } from '../settings/setting.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Role, Permission, RolePermission]),
     ConfigModule,
     EmailModule,
+    FileModule,
+    SettingModule,
   ],
   providers: [
     UsersService,

@@ -5,9 +5,11 @@ import {
   Get,
   NotFoundException,
   Param,
+  PayloadTooLargeException,
   Post,
   Put,
   Req,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -20,6 +22,8 @@ import { UpdateUserDTO } from '../dtos/updateUser.dto';
 import JwtAuthenticationGuard from 'src/auth/guards/jwt-authentication.guard';
 import { UpdatePasswordDTO } from '../dtos/updatePassword.dto';
 import { UserFollowUserDTO } from '../dtos/userFollowUser.dto';
+import { FilesInterceptor } from 'src/modules/files/interceptors/file.interceptor';
+import RequestWithUser from 'src/auth/interfaces/requestWithUser.interface';
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -117,5 +121,36 @@ export class UsersController {
   @UseGuards(JwtAuthenticationGuard)
   async getMyFollower(@Req() request) {
     return await this.usersService.getMyFollower(request.user.id);
+  }
+
+  @Post('avatar')
+  @UseGuards(JwtAuthenticationGuard)
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/avatars',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
+  async addAvatar(
+    @Req() request: RequestWithUser,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.usersService.addAvatar(request.user.id, {
+      path: file.path,
+      filename: file.originalname,
+      mimetype: file.mimetype,
+    });
   }
 }

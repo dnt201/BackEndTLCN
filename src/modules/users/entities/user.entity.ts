@@ -7,6 +7,7 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -18,6 +19,7 @@ import { Gender } from 'src/common/constants/gender.constant';
 import { Exclude } from 'class-transformer';
 import { Role } from './role.entity';
 import { UserFollow } from './userFollow.entity';
+import { File } from '../../files/entities/file.entity';
 
 @Entity('User')
 export class User implements ICreated, IModified, IDeleted {
@@ -75,12 +77,19 @@ export class User implements ICreated, IModified, IDeleted {
   public isActive: boolean;
 
   @Column({ nullable: true })
+  public avatarId?: number;
+
+  @Column({ nullable: true })
   @Exclude()
   public currentHashedRefreshToken: string;
 
   @DeleteDateColumn()
   @Exclude()
   public dateDeleted: Date;
+
+  @JoinColumn({ name: 'avatarId' })
+  @OneToOne(() => File, { nullable: true })
+  public avatar?: File;
 
   @ManyToOne(() => Role)
   @JoinColumn()
