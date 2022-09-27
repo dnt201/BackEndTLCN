@@ -178,6 +178,11 @@ export class AppService implements OnModuleInit {
         key: 'EMAIL_PASSWORD',
         value: 'tkqfbqjmhhzfircw',
       },
+      {
+        group: 'GENERAL',
+        key: 'UPLOADED_FILE_DESTINATION',
+        value: './upload',
+      },
     ];
 
     await Promise.all(
