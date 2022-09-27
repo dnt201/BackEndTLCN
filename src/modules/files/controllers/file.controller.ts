@@ -6,7 +6,6 @@ import {
   ClassSerializerInterceptor,
   StreamableFile,
   Res,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { createReadStream } from 'fs';
@@ -20,7 +19,7 @@ export default class FileController {
 
   @Get(':id')
   async getDatabaseFileById(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Res({ passthrough: true }) response: Response,
   ) {
     const file = await this.fileService.getFileById(id);

@@ -17,7 +17,7 @@ export class FileService {
     return newFile;
   }
 
-  async getFileById(fileId: number) {
+  async getFileById(fileId: string) {
     const file = await this.fileRepository.findOne({ where: [{ id: fileId }] });
     if (!file) {
       throw new NotFoundException(`Not found file with id ${fileId}`);
