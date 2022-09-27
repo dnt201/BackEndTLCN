@@ -24,6 +24,7 @@ import { UpdatePasswordDTO } from '../dtos/updatePassword.dto';
 import { UserFollowUserDTO } from '../dtos/userFollowUser.dto';
 import { FilesInterceptor } from 'src/modules/files/interceptors/file.interceptor';
 import RequestWithUser from 'src/auth/interfaces/requestWithUser.interface';
+import { getUserWithImageLink } from 'src/utils/getImageLinkUrl';
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -34,7 +35,10 @@ export class UsersController {
   // @UseGuards(RoleGuard(process.env.ADMIN_ROLE))
   @UseGuards(PermissionGuard(ListPermission.ViewAllUser))
   async getAllUsers() {
-    return await this.usersService.getAllUsers();
+    const listUser = await this.usersService.getAllUsers();
+    return listUser.map((user) => {
+      return getUserWithImageLink(user);
+    });
   }
 
   @Put('/admin/edit/:id')
@@ -45,7 +49,11 @@ export class UsersController {
   ) {
     const user = await this.usersService.getUserById(id);
     if (!user) throw new NotFoundException(`Not found user with id: ${id}`);
-    return await this.usersService.updateUserInfoWithAdmin(id, updateUserData);
+    const userData = await this.usersService.updateUserInfoWithAdmin(
+      id,
+      updateUserData,
+    );
+    return getUserWithImageLink(userData);
   }
 
   @Put('/edit')
@@ -54,7 +62,8 @@ export class UsersController {
     const user = request.user;
     user.role = undefined;
     user.permission = undefined;
-    return await this.usersService.updateUserInfo(user, userInfo);
+    const userData = await this.usersService.updateUserInfo(user, userInfo);
+    return getUserWithImageLink(userData);
   }
 
   @UseGuards(JwtAuthenticationGuard)
@@ -64,7 +73,11 @@ export class UsersController {
     @Body() updatePassword: UpdatePasswordDTO,
   ) {
     const userId = request.user.id;
-    return await this.usersService.updatePassword(userId, updatePassword);
+    const userData = await this.usersService.updatePassword(
+      userId,
+      updatePassword,
+    );
+    return getUserWithImageLink(userData);
   }
 
   @Get('/deleted')
@@ -78,7 +91,7 @@ export class UsersController {
   async getUserById(@Param() { id }) {
     const user = await this.usersService.getUserById(id);
     if (!user) throw new NotFoundException(`Not found user with id: ${id}`);
-    return user;
+    return getUserWithImageLink(user);
   }
 
   @Post('follow')
@@ -114,13 +127,19 @@ export class UsersController {
   @Get('/my/follow')
   @UseGuards(JwtAuthenticationGuard)
   async getMyFollowUser(@Req() request) {
-    return await this.usersService.getMyFollowUser(request.user.id);
+    const listUser = await this.usersService.getMyFollowUser(request.user.id);
+    return listUser.map((user) => {
+      return getUserWithImageLink(user);
+    });
   }
 
   @Get('/my/follower')
   @UseGuards(JwtAuthenticationGuard)
   async getMyFollower(@Req() request) {
-    return await this.usersService.getMyFollower(request.user.id);
+    const listUser = await this.usersService.getMyFollower(request.user.id);
+    return listUser.map((user) => {
+      return getUserWithImageLink(user);
+    });
   }
 
   @Post('avatar')

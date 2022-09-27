@@ -209,6 +209,7 @@ export class UsersService {
     await this.userRepository.update(userId, {
       avatarId: avatar.id,
     });
+    return `http://localhost:3000/file/${avatar.id}`;
   }
 
   private getActivateToken() {

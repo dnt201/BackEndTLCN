@@ -77,7 +77,7 @@ export class User implements ICreated, IModified, IDeleted {
   public isActive: boolean;
 
   @Column({ nullable: true })
-  public avatarId?: number;
+  public avatarId?: string;
 
   @Column({ nullable: true })
   @Exclude()
