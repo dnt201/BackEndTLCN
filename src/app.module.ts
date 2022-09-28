@@ -9,6 +9,7 @@ import { AppService } from './startup.service';
 import { PostModule } from './modules/posts/post.module';
 import { SettingModule } from './modules/settings/setting.module';
 import { FileModule } from './modules/files/file.module';
+import { CategoryModule } from './modules/categories/category.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { FileModule } from './modules/files/file.module';
     PostModule,
     SettingModule,
     FileModule,
+    CategoryModule,
   ],
   controllers: [],
   providers: [AppService],
