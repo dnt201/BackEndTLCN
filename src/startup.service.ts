@@ -16,6 +16,7 @@ import { CreatePermissionDTO } from './modules/users/dtos/createPermission.dto';
 import { PostTag_Permission } from './modules/posts/permission/permission';
 import { Setting_Permission } from './modules/settings/permission/setting.permission';
 import { SettingService } from './modules/settings/services/setting.service';
+import { Category_Permission } from './modules/categories/permissions/permisison';
 
 @Injectable()
 export class AppService implements OnModuleInit {
@@ -54,6 +55,7 @@ export class AppService implements OnModuleInit {
       ...ChangeEnumToArray(User_Permission),
       ...ChangeEnumToArray(PostTag_Permission),
       ...ChangeEnumToArray(Setting_Permission),
+      ...ChangeEnumToArray(Category_Permission),
     ];
   }
   async onModuleInit() {
