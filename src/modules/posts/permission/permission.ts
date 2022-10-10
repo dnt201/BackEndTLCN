@@ -4,3 +4,7 @@ export enum PostTag_Permission {
   DeletePostTag = 'Delete Post Tag',
   ViewPostTag = 'View Post Tag',
 }
+
+export enum Post_Permission {
+  ApprovePost = 'Approve Post',
+}
