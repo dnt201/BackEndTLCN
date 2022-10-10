@@ -13,7 +13,10 @@ import {
 } from './modules/users/permission/permission';
 import { ChangeEnumToArray } from './utils/changeEnumToArray';
 import { CreatePermissionDTO } from './modules/users/dtos/createPermission.dto';
-import { PostTag_Permission } from './modules/posts/permission/permission';
+import {
+  PostTag_Permission,
+  Post_Permission,
+} from './modules/posts/permission/permission';
 import { Setting_Permission } from './modules/settings/permission/setting.permission';
 import { SettingService } from './modules/settings/services/setting.service';
 import { Category_Permission } from './modules/categories/permissions/permisison';
@@ -56,6 +59,7 @@ export class AppService implements OnModuleInit {
       ...ChangeEnumToArray(PostTag_Permission),
       ...ChangeEnumToArray(Setting_Permission),
       ...ChangeEnumToArray(Category_Permission),
+      ...ChangeEnumToArray(Post_Permission),
     ];
   }
   async onModuleInit() {
