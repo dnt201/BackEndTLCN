@@ -29,7 +29,7 @@ export class PostTagService {
     return newPostTag;
   }
 
-  async updatePostTag(id: number, updatePostTagData: UpdatePostTagDTO) {
+  async updatePostTag(id: string, updatePostTagData: UpdatePostTagDTO) {
     const postTagWithId = await this.postTagRepository.getPostTagById(id);
     const existPostTag = await this.postTagRepository.getPostSameInfo(
       updatePostTagData,
@@ -59,7 +59,7 @@ export class PostTagService {
     return await this.postTagRepository.deletePostTag(id);
   }
 
-  async getPostTagById(id: number) {
+  async getPostTagById(id: string) {
     return await this.postTagRepository.getPostTagById(id);
   }
 

@@ -23,7 +23,7 @@ export class PostTagRepository extends Repository<PostTag> {
     }
   }
 
-  async updatePostTag(id: number, updatePostTagData: UpdatePostTagDTO) {
+  async updatePostTag(id: string, updatePostTagData: UpdatePostTagDTO) {
     try {
       await this.update(id, updatePostTagData);
       return await this.getPostTagById(id);
@@ -46,7 +46,7 @@ export class PostTagRepository extends Repository<PostTag> {
     }
   }
 
-  async getPostTagById(id: number) {
+  async getPostTagById(id: string) {
     try {
       return await this.findOne({ where: [{ id: id }] });
     } catch (error) {

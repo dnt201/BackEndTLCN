@@ -8,7 +8,6 @@ import {
   Res,
   Post,
   UseGuards,
-  PayloadTooLargeException,
   Req,
   UploadedFile,
 } from '@nestjs/common';

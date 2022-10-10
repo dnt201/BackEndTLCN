@@ -41,18 +41,18 @@ export class PostTagController {
     @Param() { id }: FindOneParams,
     @Body() postTagData: UpdatePostTagDTO,
   ) {
-    const existedPostTag = await this.postTagService.getPostTagById(Number(id));
+    const existedPostTag = await this.postTagService.getPostTagById(id);
 
     if (!existedPostTag)
       throw new NotFoundException(`Not found PostTag with id ${id}`);
 
-    return await this.postTagService.updatePostTag(Number(id), postTagData);
+    return await this.postTagService.updatePostTag(id, postTagData);
   }
 
   @Delete('delete/:id')
   @UseGuards(PermissionGuard(ListPermission.DeletePostTag))
   async deletePostTag(@Param() { id }: FindOneParams) {
-    const existedPostTag = await this.postTagService.getPostTagById(Number(id));
+    const existedPostTag = await this.postTagService.getPostTagById(id);
 
     if (!existedPostTag)
       throw new NotFoundException(`Not found Post Tag with id ${id}`);
