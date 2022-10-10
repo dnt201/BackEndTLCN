@@ -1,3 +1,4 @@
+import { Post } from './../../posts/entities/post.entity';
 import {
   Column,
   CreateDateColumn,
@@ -103,4 +104,7 @@ export class User implements ICreated, IModified, IDeleted {
 
   @OneToMany(() => UserFollow, (userFollow: UserFollow) => userFollow.follower)
   public followers: User[];
+
+  @OneToMany(() => Post, (post: Post) => post.owner)
+  public posts: Post[];
 }

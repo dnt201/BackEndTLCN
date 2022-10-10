@@ -1,7 +1,7 @@
 import { IsString, Matches } from 'class-validator';
 
 export class CreatePostTagDTO {
-  @Matches(/^[A-Za-z0-9-+/*#]+$/, {
+  @Matches(/^[A-Za-z0-9-+/*#.]+$/, {
     message: 'Post Tag must not have spaces, please use - instead of space',
   })
   public postTagName: string;

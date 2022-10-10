@@ -35,15 +35,20 @@ export class CategoryService {
     const categoryExist = await this.categoryRepository.getCategoryByName(
       createCategoryData.categoryName,
     );
-    const categoryParent = await this.categoryRepository.getCategoryById(
-      createCategoryData.rootCategoryId,
-    );
+
     if (categoryExist) {
       throw new BadRequestException(
         `Category name already exists. Try another name`,
       );
-    } else if (!categoryParent) {
-      throw new NotFoundException(`Not found parent category. Try another`);
+    }
+
+    if (createCategoryData.rootCategoryId) {
+      const categoryParent = await this.categoryRepository.getCategoryById(
+        createCategoryData.rootCategoryId,
+      );
+      if (!categoryParent) {
+        throw new NotFoundException(`Not found parent category. Try another`);
+      }
     }
 
     const category = await this.categoryRepository.createCategory(

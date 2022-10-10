@@ -1,3 +1,4 @@
+import { Post } from './../../posts/entities/post.entity';
 import {
   Column,
   Entity,
@@ -6,6 +7,7 @@ import {
   Tree,
   TreeParent,
   TreeChildren,
+  OneToMany,
 } from 'typeorm';
 
 @Entity('Category')
@@ -23,4 +25,7 @@ export class Category {
 
   @TreeChildren()
   public childCategory: Category[];
+
+  @OneToMany(() => Post, (post: Post) => post.category)
+  public posts: Post[];
 }
