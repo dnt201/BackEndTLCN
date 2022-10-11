@@ -1,11 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { UsersService } from 'src/modules/users/services/users.service';
 import { CreatePostDTO } from '../dtos/createPost.dto';
 import { UpdatePostDTO } from '../dtos/updatePost.dto';
+import { VotePostDTO } from '../dtos/votePost.dto';
 import { PostRepository } from '../repositories/post.repository';
+import { PostVoteRepository } from './../repositories/postVote.repository';
 
 @Injectable()
 export class PostService {
-  constructor(private readonly postRepository: PostRepository) {}
+  constructor(
+    private readonly postRepository: PostRepository,
+    private readonly userService: UsersService,
+    private readonly postVoteRepository: PostVoteRepository,
+  ) {}
 
   async createPost(createPostData: CreatePostDTO, ownerId: string) {
     const postData = await this.postRepository.createPost(
@@ -38,5 +45,38 @@ export class PostService {
 
   async getPostById(postId: string) {
     return await this.postRepository.getPostById(postId);
+  }
+
+  async votePost(votePostData: VotePostDTO) {
+    const user = await this.userService.getUserById(votePostData.userId);
+    const post = await this.getPostById(votePostData.postId);
+
+    if (!user) {
+      throw new NotFoundException(
+        `Can not found user with id: ${votePostData.userId}`,
+      );
+    } else if (!post) {
+      throw new NotFoundException(
+        `Can not find post with id: ${votePostData.postId}`,
+      );
+    }
+
+    const votePost = await this.postVoteRepository.getVotePostById(
+      votePostData.userId,
+      votePostData.postId,
+    );
+    if (!votePost) {
+      const votePost = await this.postVoteRepository.votePost(votePostData);
+      await this.postVoteRepository.save(votePost);
+    } else if (votePost.type === votePostData.type) {
+      await this.postVoteRepository.deleteVote(
+        votePostData.userId,
+        votePostData.postId,
+      );
+    } else {
+      await this.postVoteRepository.updateVotePost(votePostData);
+    }
+
+    return true;
   }
 }
