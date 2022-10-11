@@ -12,10 +12,12 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { PostTag } from './postTag.entity';
+import { PostVote } from './postVote.entity';
 
 @Entity('Posts')
 export class Post implements ICreated, IModified, IDeleted {
@@ -42,6 +44,9 @@ export class Post implements ICreated, IModified, IDeleted {
 
   @Column({ default: 'false' })
   deleted: boolean;
+
+  @OneToMany(() => PostVote, (postVote: PostVote) => postVote.post)
+  public postVotes: PostVote[];
 
   @ManyToOne(() => User, (user: User) => user.posts)
   @JoinColumn()

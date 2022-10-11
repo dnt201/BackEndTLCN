@@ -55,4 +55,24 @@ export class PostController {
     const postUpdated = await this.postService.editPost(postId, updatePostData);
     return postUpdated;
   }
+
+  @Post('/:id/vote')
+  @UseGuards(JwtAuthenticationGuard)
+  async votePost(
+    @Req() request: RequestWithUser,
+    @Param('id') postId: string,
+    @Body() body,
+  ) {
+    const post = await this.postService.getPostById(postId);
+    if (!post) {
+      throw new BadRequestException(`Not found post with id ${postId}`);
+    }
+
+    const vote = await this.postService.votePost({
+      userId: request.user.id,
+      postId: postId,
+      type: body.type === 'Upvote' ? true : false,
+    });
+    return vote;
+  }
 }
