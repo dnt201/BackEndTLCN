@@ -4,9 +4,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { Page } from 'src/common/dto/Page';
+import { PagedData } from 'src/common/dto/PageData';
+import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
 import { DataSource, Repository } from 'typeorm';
 
 import { CreatePermissionDTO } from '../dtos/createPermission.dto';
+import { PermissionPage } from '../dtos/permissionPage.dto';
 import { UpdatePermissionDTO } from '../dtos/updatePermission.dto';
 import { Permission } from '../entities/permission.entity';
 
@@ -75,9 +79,32 @@ export class PermissionRepository extends Repository<Permission> {
     });
   }
 
-  async getAllPermissions() {
+  async getAllPermissions(page: PermissionPage) {
+    const orderQuery =
+      page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);
+
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<Permission> = new PagedData<Permission>();
+
     try {
-      return await this.find({});
+      const listPermisison = await this.find({
+        order: orderQuery,
+        take: takeQuery,
+        skip: (skipQuery - 1) * takeQuery,
+      });
+
+      const totalUser = await this.count();
+
+      dataReturn.data = listPermisison;
+      dataReturn.page = new Page(
+        takeQuery,
+        skipQuery,
+        totalUser,
+        page?.order ?? [],
+      );
+      return dataReturn;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

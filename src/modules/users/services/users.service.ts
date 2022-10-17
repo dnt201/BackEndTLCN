@@ -16,6 +16,7 @@ import { UpdatePasswordDTO } from '../dtos/updatePassword.dto';
 import { UserFollowRepository } from './../repositories/userFollow.repository';
 import { FileDTO } from 'src/modules/files/dtos/file.dto';
 import { FileService } from 'src/modules/files/services/file.service';
+import { UserPage } from '../dtos/userPage.dto';
 
 @Injectable()
 export class UsersService {
@@ -118,8 +119,8 @@ export class UsersService {
     return this.getUserById(user.id);
   }
 
-  async getAllUsers(): Promise<User[]> {
-    const users = await this.userRepository.find({ take: 20 });
+  async getAllUsers(page: UserPage) {
+    const users = await this.userRepository.getAllUser(page);
     return users;
   }
 

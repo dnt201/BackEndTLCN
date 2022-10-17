@@ -4,8 +4,12 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { Page } from 'src/common/dto/Page';
+import { PagedData } from 'src/common/dto/PageData';
+import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
 import { DataSource, Repository } from 'typeorm';
 import { CreatePostTagDTO } from '../dtos/createPostTag.dto';
+import { PostTagPage } from '../dtos/posttagPage.dto';
 import { UpdatePostTagDTO } from '../dtos/updatePostTag.dto';
 import { PostTag } from '../entities/postTag.entity';
 
@@ -62,9 +66,31 @@ export class PostTagRepository extends Repository<PostTag> {
     }
   }
 
-  async getAllPostTags() {
+  async getAllPostTags(page: PostTagPage) {
+    const orderQuery =
+      page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);
+
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<PostTag> = new PagedData<PostTag>();
+
     try {
-      return await this.find({});
+      const listPostTag = await this.find({
+        order: orderQuery,
+        take: takeQuery,
+        skip: (skipQuery - 1) * takeQuery,
+      });
+      const totalPostTag = await this.count();
+
+      dataReturn.data = listPostTag;
+      dataReturn.page = new Page(
+        takeQuery,
+        skipQuery,
+        totalPostTag,
+        page?.order ?? [],
+      );
+      return dataReturn;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

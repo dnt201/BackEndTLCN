@@ -18,6 +18,9 @@ import { PermissionGuard } from 'src/auth/guards/permission.guard';
 import { CreatePostTagDTO } from '../dtos/createPostTag.dto';
 import { UpdatePostTagDTO } from '../dtos/updatePostTag.dto';
 import { FindOneParams } from 'src/utils/findOneParams';
+import { PostTagPage } from '../dtos/posttagPage.dto';
+import { PagedData } from 'src/common/dto/PageData';
+import { ReturnResult } from 'src/common/dto/ReturnResult';
 
 @Controller('post/post-tag')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -25,8 +28,15 @@ export class PostTagController {
   constructor(private readonly postTagService: PostTagService) {}
 
   @Get()
-  async getAllPostTag(): Promise<PostTag[]> {
-    return await this.postTagService.getAllPostTags();
+  async getAllPostTag(@Body() page: PostTagPage) {
+    const dataReturn: ReturnResult<PagedData<PostTag>> = new ReturnResult<
+      PagedData<PostTag>
+    >();
+    const value = await this.postTagService.getAllPostTags(page);
+    dataReturn.result = value;
+    dataReturn.message = null;
+
+    return dataReturn;
   }
 
   @Post('create')

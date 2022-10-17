@@ -19,6 +19,9 @@ import { Permission } from '../entities/permission.entity';
 import { PermissionService } from '../services/permissions.service';
 import { Permission_Permission as ListPermission } from '../permission/permission';
 import { PermissionGuard } from 'src/auth/guards/permission.guard';
+import { PermissionPage } from '../dtos/permissionPage.dto';
+import { ReturnResult } from 'src/common/dto/ReturnResult';
+import { PagedData } from 'src/common/dto/PageData';
 
 @Controller('admin/permissions')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -35,8 +38,16 @@ export class PermissionsController {
   @Get()
   // @UseGuards(RoleGuard(process.env.ADMIN_ROLE))
   @UseGuards(PermissionGuard(ListPermission.ViewPermission))
-  async getAllPermission(): Promise<Permission[]> {
-    return await this.permissionService.getAllPermissions();
+  async getAllPermission(@Body() page: PermissionPage) {
+    const dataReturn: ReturnResult<PagedData<Permission>> = new ReturnResult<
+      PagedData<Permission>
+    >();
+
+    const listPermisison = await this.permissionService.getAllPermissions(page);
+    dataReturn.result = listPermisison;
+    dataReturn.message = null;
+
+    return dataReturn;
   }
 
   @Post('create')
