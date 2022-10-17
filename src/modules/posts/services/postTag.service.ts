@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreatePostTagDTO } from '../dtos/createPostTag.dto';
+import { PostTagPage } from '../dtos/posttagPage.dto';
 import { UpdatePostTagDTO } from '../dtos/updatePostTag.dto';
 import { PostTagRepository } from '../repositories/postTag.repository';
 
@@ -63,7 +64,7 @@ export class PostTagService {
     return await this.postTagRepository.getPostTagById(id);
   }
 
-  async getAllPostTags() {
-    return await this.postTagRepository.getAllPostTags();
+  async getAllPostTags(page: PostTagPage) {
+    return await this.postTagRepository.getAllPostTags(page);
   }
 }

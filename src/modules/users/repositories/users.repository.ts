@@ -4,9 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Page } from 'src/common/dto/Page';
+import { PagedData } from 'src/common/dto/PageData';
+import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
 import { DataSource, Repository } from 'typeorm';
 import { CreateUserDTO } from '../dtos/createUser.dto';
 import { UpdateUserDTO } from '../dtos/updateUser.dto';
+import { UserPage } from '../dtos/userPage.dto';
 
 import { User } from '../entities/user.entity';
 import { RoleService } from '../services/roles.service';
@@ -117,6 +121,37 @@ export class UserRepository extends Repository<User> {
   async getUserByToken(token: string): Promise<User> {
     try {
       return await this.findOne({ where: [{ token: token }] });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getAllUser(page: UserPage) {
+    const orderQuery =
+      page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);
+
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<User> = new PagedData<User>();
+
+    try {
+      const listUser = await this.find({
+        order: orderQuery,
+        take: takeQuery,
+        skip: (skipQuery - 1) * takeQuery,
+      });
+
+      const totalUser = await this.count();
+
+      dataReturn.data = listUser;
+      dataReturn.page = new Page(
+        takeQuery,
+        skipQuery,
+        totalUser,
+        page?.order ?? [],
+      );
+      return dataReturn;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

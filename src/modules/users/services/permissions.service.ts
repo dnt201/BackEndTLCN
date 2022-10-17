@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreatePermissionDTO } from '../dtos/createPermission.dto';
+import { PermissionPage } from '../dtos/permissionPage.dto';
 import { UpdatePermissionDTO } from '../dtos/updatePermission.dto';
 import { PermissionRepository } from '../repositories/permission.repository';
 
@@ -62,8 +63,8 @@ export class PermissionService {
     return await this.permissionRepository.getPermissionById(id);
   }
 
-  async getAllPermissions() {
-    return await this.permissionRepository.getAllPermissions();
+  async getAllPermissions(page: PermissionPage) {
+    return await this.permissionRepository.getAllPermissions(page);
   }
 
   async getPermissionByDisplayName(displayName: string) {

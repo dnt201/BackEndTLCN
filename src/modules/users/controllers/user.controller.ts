@@ -25,6 +25,10 @@ import { UserFollowUserDTO } from '../dtos/userFollowUser.dto';
 import { FilesInterceptor } from 'src/modules/files/interceptors/file.interceptor';
 import RequestWithUser from 'src/auth/interfaces/requestWithUser.interface';
 import { getUserWithImageLink } from 'src/utils/getImageLinkUrl';
+import { UserPage } from '../dtos/userPage.dto';
+import { ReturnResult } from 'src/common/dto/ReturnResult';
+import { PagedData } from 'src/common/dto/PageData';
+import { User } from '../entities/user.entity';
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -34,11 +38,20 @@ export class UsersController {
   @Get('/all')
   // @UseGuards(RoleGuard(process.env.ADMIN_ROLE))
   @UseGuards(PermissionGuard(ListPermission.ViewAllUser))
-  async getAllUsers() {
-    const listUser = await this.usersService.getAllUsers();
-    return listUser.map((user) => {
+  async getAllUsers(@Body() page: UserPage) {
+    const dataReturn: ReturnResult<PagedData<User>> = new ReturnResult<
+      PagedData<User>
+    >();
+
+    const listUser = await this.usersService.getAllUsers(page);
+    listUser.data = listUser.data.map((user) => {
       return getUserWithImageLink(user);
     });
+
+    dataReturn.result = listUser;
+    dataReturn.message = null;
+
+    return dataReturn;
   }
 
   @Put('/admin/edit/:id')
