@@ -1,3 +1,4 @@
+import { CreatePostCommentDTO } from './../dtos/createComment.dto';
 import { UpdatePostDTO } from './../dtos/updatePost.dto';
 import {
   BadRequestException,
@@ -74,5 +75,31 @@ export class PostController {
       type: body.type === 'Upvote' ? true : false,
     });
     return vote;
+  }
+
+  @Post('/:id/comment')
+  @UseGuards(JwtAuthenticationGuard)
+  async commentPost(
+    @Req() request: RequestWithUser,
+    @Param('id') postId: string,
+    @Body() createPostCommentData: CreatePostCommentDTO,
+  ) {
+    const userCommentId = request.user.id;
+
+    if ((await this.isExistPost(postId)) === false) {
+      throw new BadRequestException(`Not found post with id ${postId}`);
+    }
+
+    const postComment = await this.postService.commentPost({
+      ...createPostCommentData,
+      userCommentId: userCommentId,
+      postId: postId,
+    });
+    return postComment;
+  }
+
+  private async isExistPost(postId: string): Promise<boolean> {
+    const post = await this.postService.getPostById(postId);
+    return !!post;
   }
 }

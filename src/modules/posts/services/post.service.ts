@@ -1,9 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersService } from 'src/modules/users/services/users.service';
+import { CreatePostCommentDTO } from '../dtos/createComment.dto';
 import { CreatePostDTO } from '../dtos/createPost.dto';
 import { UpdatePostDTO } from '../dtos/updatePost.dto';
 import { VotePostDTO } from '../dtos/votePost.dto';
 import { PostRepository } from '../repositories/post.repository';
+import { PostCommentRepository } from '../repositories/postComment.repository';
+import { PostCommentTagRepository } from '../repositories/postCommentTag.repository';
 import { PostVoteRepository } from './../repositories/postVote.repository';
 
 @Injectable()
@@ -12,6 +15,8 @@ export class PostService {
     private readonly postRepository: PostRepository,
     private readonly userService: UsersService,
     private readonly postVoteRepository: PostVoteRepository,
+    private readonly postCommentRepository: PostCommentRepository,
+    private readonly postCommentTagRepository: PostCommentTagRepository,
   ) {}
 
   async createPost(createPostData: CreatePostDTO, ownerId: string) {
@@ -78,5 +83,52 @@ export class PostService {
     }
 
     return true;
+  }
+
+  async commentPost(createData: CreatePostCommentDTO) {
+    const user = await this.userService.getUserById(createData.userCommentId);
+    const post = await this.getPostById(createData.postId);
+    if (!user) {
+      throw new NotFoundException(
+        `Can not found user with id: ${createData.userCommentId}`,
+      );
+    } else if (!post) {
+      throw new NotFoundException(
+        `Can not find post with id: ${createData.postId}`,
+      );
+    }
+
+    const postComment = await this.postCommentRepository.createComment({
+      postId: createData.postId,
+      userId: createData.userCommentId,
+      content: createData.commentContent,
+    });
+    await this.postCommentRepository.save(postComment);
+
+    Promise.all(
+      createData.userTag.map(async (userTag) => {
+        try {
+          const userOnTag = await this.userService.getUserById(userTag);
+          if (!userOnTag) {
+            throw new NotFoundException(
+              `Can not found user with id: ${userTag}`,
+            );
+          }
+
+          const postCommentTag =
+            await this.postCommentTagRepository.createCommentTag({
+              userId: userTag,
+              commentId: postComment.commentId,
+              typeOfComment: 'Comment',
+            });
+
+          await this.postCommentTagRepository.save(postCommentTag);
+        } catch (error) {
+          throw new NotFoundException(error.message);
+        }
+      }),
+    );
+
+    return postComment;
   }
 }
