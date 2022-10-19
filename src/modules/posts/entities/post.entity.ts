@@ -18,6 +18,7 @@ import {
 } from 'typeorm';
 import { PostTag } from './postTag.entity';
 import { PostVote } from './postVote.entity';
+import { PostComment } from './postComment.entity';
 
 @Entity('Posts')
 export class Post implements ICreated, IModified, IDeleted {
@@ -47,6 +48,9 @@ export class Post implements ICreated, IModified, IDeleted {
 
   @OneToMany(() => PostVote, (postVote: PostVote) => postVote.post)
   public postVotes: PostVote[];
+
+  @OneToMany(() => PostComment, (postComment: PostComment) => postComment.post)
+  public postComments: PostComment[];
 
   @ManyToOne(() => User, (user: User) => user.posts)
   @JoinColumn()

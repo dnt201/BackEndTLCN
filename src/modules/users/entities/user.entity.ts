@@ -22,6 +22,8 @@ import { Role } from './role.entity';
 import { UserFollow } from './userFollow.entity';
 import { File } from '../../files/entities/file.entity';
 import { PostVote } from 'src/modules/posts/entities/postVote.entity';
+import { PostComment } from 'src/modules/posts/entities/postComment.entity';
+import { PostCommentTag } from 'src/modules/posts/entities/postCommentTag.entity';
 
 @Entity('User')
 export class User implements ICreated, IModified, IDeleted {
@@ -111,4 +113,13 @@ export class User implements ICreated, IModified, IDeleted {
 
   @OneToMany(() => PostVote, (postVote: PostVote) => postVote.user)
   public postVotes: PostVote[];
+
+  @OneToMany(() => PostComment, (postComment: PostComment) => postComment.user)
+  public postComments: PostComment[];
+
+  @OneToMany(
+    () => PostCommentTag,
+    (postCommentTag: PostCommentTag) => postCommentTag.user,
+  )
+  public postCommentTags: PostCommentTag[];
 }
