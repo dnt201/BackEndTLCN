@@ -6,6 +6,7 @@ import { UpdatePostDTO } from '../dtos/updatePost.dto';
 import { VotePostDTO } from '../dtos/votePost.dto';
 import { PostRepository } from '../repositories/post.repository';
 import { PostCommentRepository } from '../repositories/postComment.repository';
+import { PostReplyRepository } from '../repositories/postCommentReply.repository';
 import { PostCommentTagRepository } from '../repositories/postCommentTag.repository';
 import { PostVoteRepository } from './../repositories/postVote.repository';
 
@@ -17,6 +18,7 @@ export class PostService {
     private readonly postVoteRepository: PostVoteRepository,
     private readonly postCommentRepository: PostCommentRepository,
     private readonly postCommentTagRepository: PostCommentTagRepository,
+    private readonly postReplyRepository: PostReplyRepository,
   ) {}
 
   async createPost(createPostData: CreatePostDTO, ownerId: string) {
@@ -130,5 +132,56 @@ export class PostService {
     );
 
     return postComment;
+  }
+
+  async getCommentById(commentId: string) {
+    return await this.postCommentRepository.getCommentById(commentId);
+  }
+
+  async replyPost(createData: CreatePostCommentDTO) {
+    const user = await this.userService.getUserById(createData.userCommentId);
+    const comment = await this.getCommentById(createData.commentId);
+    if (!user) {
+      throw new NotFoundException(
+        `Can not found user with id: ${createData.userCommentId}`,
+      );
+    } else if (!comment) {
+      throw new NotFoundException(
+        `Can not find comment with id: ${createData.commentId}`,
+      );
+    }
+
+    const postReply = await this.postReplyRepository.createReply({
+      commentId: createData.commentId,
+      userId: createData.userCommentId,
+      content: createData.commentContent,
+    });
+    await this.postReplyRepository.save(postReply);
+
+    Promise.all(
+      createData.userTag.map(async (userTag) => {
+        try {
+          const userOnTag = await this.userService.getUserById(userTag);
+          if (!userOnTag) {
+            throw new NotFoundException(
+              `Can not found user with id: ${userTag}`,
+            );
+          }
+
+          const postCommentTag =
+            await this.postCommentTagRepository.createCommentTag({
+              userId: userTag,
+              commentId: postReply.replyId,
+              typeOfComment: 'Reply',
+            });
+
+          await this.postCommentTagRepository.save(postCommentTag);
+        } catch (error) {
+          throw new NotFoundException(error.message);
+        }
+      }),
+    );
+
+    return postReply;
   }
 }
