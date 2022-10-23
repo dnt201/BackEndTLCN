@@ -24,6 +24,7 @@ import { File } from '../../files/entities/file.entity';
 import { PostVote } from 'src/modules/posts/entities/postVote.entity';
 import { PostComment } from 'src/modules/posts/entities/postComment.entity';
 import { PostCommentTag } from 'src/modules/posts/entities/postCommentTag.entity';
+import { PostReply } from 'src/modules/posts/entities/postReply.entity';
 
 @Entity('User')
 export class User implements ICreated, IModified, IDeleted {
@@ -116,6 +117,9 @@ export class User implements ICreated, IModified, IDeleted {
 
   @OneToMany(() => PostComment, (postComment: PostComment) => postComment.user)
   public postComments: PostComment[];
+
+  @OneToMany(() => PostReply, (postReply: PostReply) => postReply.user)
+  public postReplies: PostReply[];
 
   @OneToMany(
     () => PostCommentTag,

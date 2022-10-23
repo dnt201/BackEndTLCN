@@ -17,4 +17,13 @@ export class PostCommentRepository extends Repository<PostComment> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async getCommentById(id: string) {
+    try {
+      const postComment = await this.find({ where: [{ commentId: id }] });
+      return postComment;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }

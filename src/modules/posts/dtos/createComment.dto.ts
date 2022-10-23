@@ -15,6 +15,10 @@ export class CreatePostCommentDTO {
   @IsOptional()
   @IsString()
   public postId: string;
+
+  @IsOptional()
+  @IsString()
+  public commentId: string;
 }
 
 export class PostCommentDTO {
@@ -27,4 +31,10 @@ export class PostCommentTagDTO {
   public userId: string;
   public commentId: string;
   public typeOfComment: string;
+}
+
+export class PostReplyDTO {
+  public userId: string;
+  public commentId: string;
+  public content: string;
 }

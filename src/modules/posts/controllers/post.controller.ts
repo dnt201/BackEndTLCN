@@ -98,8 +98,35 @@ export class PostController {
     return postComment;
   }
 
+  @Post('/:id/reply')
+  @UseGuards(JwtAuthenticationGuard)
+  async replyPost(
+    @Req() request: RequestWithUser,
+    @Param('id') commentId: string,
+    @Body() createPostCommentData: CreatePostCommentDTO,
+  ) {
+    const userReplyId = request.user.id;
+
+    const existComment = await this.isExistComment(commentId);
+    if (existComment === false) {
+      throw new BadRequestException(`Not found comment with id ${commentId}`);
+    }
+
+    const postReply = await this.postService.replyPost({
+      ...createPostCommentData,
+      userCommentId: userReplyId,
+      commentId: commentId,
+    });
+    return postReply;
+  }
+
   private async isExistPost(postId: string): Promise<boolean> {
     const post = await this.postService.getPostById(postId);
     return !!post;
+  }
+
+  private async isExistComment(commentId: string): Promise<boolean> {
+    const comment = await this.postService.getCommentById(commentId);
+    return !!comment;
   }
 }
