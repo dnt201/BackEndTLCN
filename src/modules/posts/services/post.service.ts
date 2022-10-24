@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersService } from 'src/modules/users/services/users.service';
 import { CreatePostCommentDTO } from '../dtos/createComment.dto';
 import { CreatePostDTO } from '../dtos/createPost.dto';
+import { PostPage } from '../dtos/postPage.dto';
 import { UpdatePostDTO } from '../dtos/updatePost.dto';
 import { VotePostDTO } from '../dtos/votePost.dto';
 import { PostRepository } from '../repositories/post.repository';
@@ -183,5 +184,10 @@ export class PostService {
     );
 
     return postReply;
+  }
+
+  async getAllPost(page: PostPage) {
+    const listPosts = this.postRepository.getAllPost(page);
+    return listPosts;
   }
 }

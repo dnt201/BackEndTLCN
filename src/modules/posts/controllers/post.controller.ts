@@ -1,3 +1,4 @@
+import { ReturnResult } from 'src/common/dto/ReturnResult';
 import { CreatePostCommentDTO } from './../dtos/createComment.dto';
 import { UpdatePostDTO } from './../dtos/updatePost.dto';
 import {
@@ -5,6 +6,7 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Get,
   Param,
   Post,
   Put,
@@ -18,6 +20,9 @@ import { PermissionGuard } from 'src/auth/guards/permission.guard';
 import RequestWithUser from 'src/auth/interfaces/requestWithUser.interface';
 import { Post_Permission as ListPermission } from '../permission/permission';
 import JwtAuthenticationGuard from 'src/auth/guards/jwt-authentication.guard';
+import { PagedData } from 'src/common/dto/PageData';
+import { PostPage } from '../dtos/postPage.dto';
+import { PostWithMoreInfo } from '../dtos/PostWithMoreInfo.dto';
 
 @Controller('post')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -118,6 +123,20 @@ export class PostController {
       commentId: commentId,
     });
     return postReply;
+  }
+
+  @Get('/all')
+  @UseGuards(JwtAuthenticationGuard)
+  async getAllPosts(@Body() page: PostPage) {
+    const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
+      new ReturnResult<PagedData<PostWithMoreInfo>>();
+
+    const listPost = await this.postService.getAllPost(page);
+
+    dataReturn.result = listPost;
+    dataReturn.message = null;
+
+    return dataReturn;
   }
 
   private async isExistPost(postId: string): Promise<boolean> {
