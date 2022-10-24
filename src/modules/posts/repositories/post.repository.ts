@@ -11,6 +11,12 @@ import { UsersService } from '../../users/services/users.service';
 import { CategoryService } from '../../categories/services/category.service';
 import { PostTagService } from '../services/postTag.service';
 import { UpdatePostDTO } from '../dtos/updatePost.dto';
+import { PostPage } from '../dtos/postPage.dto';
+import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
+import { PostWithMoreInfo } from '../dtos/PostWithMoreInfo.dto';
+import { ConvertPostWithMoreInfo } from 'src/utils/convertPostWithMoreInfo';
+import { PagedData } from 'src/common/dto/PageData';
+import { Page } from 'src/common/dto/Page';
 
 @Injectable()
 export class PostRepository extends Repository<Post> {
@@ -116,6 +122,42 @@ export class PostRepository extends Repository<Post> {
         category: category,
         tags: postTags,
       });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getAllPost(page: PostPage) {
+    const orderQuery =
+      page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);
+
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<PostWithMoreInfo> =
+      new PagedData<PostWithMoreInfo>();
+
+    try {
+      const listPost = await this.find({
+        relations: ['owner', 'category', 'tags'],
+        order: orderQuery,
+        take: takeQuery,
+        skip: (skipQuery - 1) * takeQuery,
+      });
+      const listPostWithData = listPost.map((data) =>
+        ConvertPostWithMoreInfo(data),
+      );
+
+      const totalPost = await this.count();
+
+      dataReturn.data = listPostWithData;
+      dataReturn.page = new Page(
+        takeQuery,
+        skipQuery,
+        totalPost,
+        page?.order ?? [],
+      );
+      return dataReturn;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
