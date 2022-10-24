@@ -63,11 +63,11 @@ export class AppService implements OnModuleInit {
     ];
   }
   async onModuleInit() {
+    await this.createSettingDefault();
     await this.createDefaultRole();
     await this.createDefaultUser();
     await this.createAdminPermission();
     await this.createDefaultRolePermission();
-    await this.createSettingDefault();
   }
 
   private async createDefaultRole() {
