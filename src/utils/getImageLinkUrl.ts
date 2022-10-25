@@ -1,6 +1,11 @@
+import { Post } from 'src/modules/posts/entities/post.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 
-export function getUserWithImageLink(user: User) {
+export class UserWithMoreInfo extends User {
+  posts: Post[];
+}
+
+export function getUserWithImageLink(user: UserWithMoreInfo) {
   const data = {
     ...user,
     dateCreated: undefined,
@@ -17,5 +22,15 @@ export function getUserWithImageLink(user: User) {
       ? `http://localhost:3000/file/${user.avatarId}`
       : null,
   };
-  return data;
+  const listPost = data.posts.map((post) => {
+    return {
+      ...post,
+      content: undefined,
+      isPublic: undefined,
+      deleted: undefined,
+      dateCreated: undefined,
+      dateDeleted: undefined,
+    };
+  });
+  return { ...data, posts: listPost };
 }

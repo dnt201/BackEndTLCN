@@ -1,4 +1,6 @@
 import {
+  forwardRef,
+  Inject,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -22,7 +24,10 @@ import { Page } from 'src/common/dto/Page';
 export class PostRepository extends Repository<Post> {
   constructor(
     private dataSource: DataSource,
+
+    @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
+
     private readonly categoryService: CategoryService,
     private readonly postTagService: PostTagService,
   ) {
@@ -158,6 +163,24 @@ export class PostRepository extends Repository<Post> {
         page?.order ?? [],
       );
       return dataReturn;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getAllPublicPostByUserId(userId: string) {
+    try {
+      const post = await this.find({
+        where: [
+          {
+            owner: {
+              id: userId,
+            },
+            isPublic: true,
+          },
+        ],
+      });
+      return post;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }

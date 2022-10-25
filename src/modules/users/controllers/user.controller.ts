@@ -102,9 +102,10 @@ export class UsersController {
 
   @Get('/:id')
   async getUserById(@Param() { id }) {
-    const user = await this.usersService.getUserById(id);
+    const user = await this.usersService.getUserByIdWithMoreInfo(id);
     if (!user) throw new NotFoundException(`Not found user with id: ${id}`);
     return getUserWithImageLink(user);
+    return user;
   }
 
   @Post('follow')
