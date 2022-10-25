@@ -3,9 +3,11 @@ import { User } from 'src/modules/users/entities/user.entity';
 
 export class UserWithMoreInfo extends User {
   posts: Post[];
+  follower: number;
+  following: number;
 }
 
-export function getUserWithImageLink(user: UserWithMoreInfo) {
+export function getUserWithImageLink(user: UserWithMoreInfo | User) {
   const data = {
     ...user,
     dateCreated: undefined,
@@ -22,7 +24,7 @@ export function getUserWithImageLink(user: UserWithMoreInfo) {
       ? `http://localhost:3000/file/${user.avatarId}`
       : null,
   };
-  const listPost = data.posts.map((post) => {
+  const listPost = data?.posts?.map((post) => {
     return {
       ...post,
       content: undefined,

@@ -65,4 +65,28 @@ export class UserFollowRepository extends Repository<UserFollow> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async countMyFollowUser(id: string) {
+    try {
+      const myFollowUser = await this.count({
+        where: [{ userId: id }],
+        relations: ['userFollow'],
+      });
+      return myFollowUser;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async countMyFollower(id: string) {
+    try {
+      const userFollow = await this.count({
+        where: [{ userFollowId: id }],
+        relations: ['follower'],
+      });
+      return userFollow;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }
