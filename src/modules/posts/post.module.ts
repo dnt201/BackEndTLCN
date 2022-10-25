@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoryModule } from '../categories/category.module';
 import { UsersModule } from '../users/users.module';
@@ -32,7 +32,7 @@ import { PostTagService } from './services/postTag.service';
       PostCommentTag,
       UserFollowPost,
     ]),
-    UsersModule,
+    forwardRef(() => UsersModule),
     CategoryModule,
   ],
   providers: [

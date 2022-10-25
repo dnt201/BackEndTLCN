@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UsersService } from 'src/modules/users/services/users.service';
 import { CreatePostCommentDTO } from '../dtos/createComment.dto';
 import { CreatePostDTO } from '../dtos/createPost.dto';
@@ -17,12 +22,14 @@ import { PostVoteRepository } from './../repositories/postVote.repository';
 export class PostService {
   constructor(
     private readonly postRepository: PostRepository,
-    private readonly userService: UsersService,
     private readonly postVoteRepository: PostVoteRepository,
     private readonly postCommentRepository: PostCommentRepository,
     private readonly postCommentTagRepository: PostCommentTagRepository,
     private readonly postReplyRepository: PostReplyRepository,
     private readonly folowPostRepository: FollowPostRepository,
+
+    @Inject(forwardRef(() => UsersService))
+    private readonly userService: UsersService,
   ) {}
 
   async createPost(createPostData: CreatePostDTO, ownerId: string) {
@@ -191,6 +198,13 @@ export class PostService {
 
   async getAllPost(page: PostPage) {
     const listPosts = await this.postRepository.getAllPost(page);
+    return listPosts;
+  }
+
+  async getAllPublicPostByUserId(userId: string) {
+    const listPosts = await this.postRepository.getAllPublicPostByUserId(
+      userId,
+    );
     return listPosts;
   }
 

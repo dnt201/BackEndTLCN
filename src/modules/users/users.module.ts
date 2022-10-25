@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { User } from './entities/user.entity';
@@ -20,6 +20,7 @@ import { EmailModule } from '../email/email.module';
 import { UserFollowRepository } from './repositories/userFollow.repository';
 import { FileModule } from '../files/file.module';
 import { SettingModule } from '../settings/setting.module';
+import { PostModule } from '../posts/post.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SettingModule } from '../settings/setting.module';
     EmailModule,
     FileModule,
     SettingModule,
+    forwardRef(() => PostModule),
   ],
   providers: [
     UsersService,

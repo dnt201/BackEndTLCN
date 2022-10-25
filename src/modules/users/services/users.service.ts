@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -17,6 +19,7 @@ import { UserFollowRepository } from './../repositories/userFollow.repository';
 import { FileDTO } from 'src/modules/files/dtos/file.dto';
 import { FileService } from 'src/modules/files/services/file.service';
 import { UserPage } from '../dtos/userPage.dto';
+import { PostService } from 'src/modules/posts/services/post.service';
 
 @Injectable()
 export class UsersService {
@@ -26,6 +29,9 @@ export class UsersService {
     private readonly emailService: EmailService,
     private readonly roleService: RoleService,
     private readonly fileService: FileService,
+
+    @Inject(forwardRef(() => PostService))
+    private readonly postService: PostService,
   ) {}
 
   async createUser(createUserData: CreateUserDTO): Promise<User> {
@@ -138,6 +144,12 @@ export class UsersService {
 
   async getUserById(id: string): Promise<User> {
     return await this.userRepository.getUserById(id);
+  }
+
+  async getUserByIdWithMoreInfo(id: string) {
+    const user = await this.userRepository.getUserById(id);
+    const listPost = await this.postService.getAllPublicPostByUserId(id);
+    return { ...user, posts: listPost };
   }
 
   async getUserByToken(token: string): Promise<User> {
