@@ -16,6 +16,7 @@ export function ConvertPostWithMoreInfo(data) {
     },
     category: data.category,
     tags: data.tags,
+    isFollow: false,
   };
   return dataReturn;
 }

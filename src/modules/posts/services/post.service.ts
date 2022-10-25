@@ -190,8 +190,24 @@ export class PostService {
   }
 
   async getAllPost(page: PostPage) {
-    const listPosts = this.postRepository.getAllPost(page);
+    const listPosts = await this.postRepository.getAllPost(page);
     return listPosts;
+  }
+
+  async getAllPostWithLoginAccount(page: PostPage, userId: string) {
+    const pagePost = await this.postRepository.getAllPost(page);
+    const listPost = pagePost.data;
+    const listPostWithFollowInfo = await Promise.all(
+      listPost.map(async (data) => {
+        const isFollow = await this.folowPostRepository.getFollowPostById(
+          userId,
+          data.id,
+        );
+        return { ...data, isFollow: isFollow ? true : false };
+      }),
+    );
+    pagePost.data = listPostWithFollowInfo;
+    return pagePost;
   }
 
   async followPost(followData: FollowPostDTO) {

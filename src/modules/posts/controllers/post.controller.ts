@@ -126,12 +126,33 @@ export class PostController {
   }
 
   @Get('/all')
-  @UseGuards(JwtAuthenticationGuard)
-  async getAllPosts(@Body() page: PostPage) {
+  async getAllPostWithNoLogin(@Body() page: PostPage) {
     const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
       new ReturnResult<PagedData<PostWithMoreInfo>>();
 
     const listPost = await this.postService.getAllPost(page);
+
+    dataReturn.result = listPost;
+    dataReturn.message = null;
+
+    return dataReturn;
+  }
+
+  @Get('/all')
+  @UseGuards(JwtAuthenticationGuard)
+  async getAllPostWithLogin(
+    @Req() request: RequestWithUser,
+    @Body() page: PostPage,
+  ) {
+    const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
+      new ReturnResult<PagedData<PostWithMoreInfo>>();
+
+    const userId = request.user.id;
+    const listPost = await this.postService.getAllPostWithLoginAccount(
+      page,
+      userId,
+    );
+    // const listPost = await this.postService.getAllPost(page);
 
     dataReturn.result = listPost;
     dataReturn.message = null;
