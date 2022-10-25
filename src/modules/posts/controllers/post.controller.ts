@@ -139,6 +139,24 @@ export class PostController {
     return dataReturn;
   }
 
+  @Post('/:id/follow')
+  @UseGuards(JwtAuthenticationGuard)
+  async followPost(
+    @Req() request: RequestWithUser,
+    @Param('id') postId: string,
+  ) {
+    const post = await this.postService.getPostById(postId);
+    if (!post) {
+      throw new BadRequestException(`Not found post with id ${postId}`);
+    }
+
+    const followData = await this.postService.followPost({
+      userId: request.user.id,
+      postId: postId,
+    });
+    return followData;
+  }
+
   private async isExistPost(postId: string): Promise<boolean> {
     const post = await this.postService.getPostById(postId);
     return !!post;

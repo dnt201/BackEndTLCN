@@ -2,9 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { UsersService } from 'src/modules/users/services/users.service';
 import { CreatePostCommentDTO } from '../dtos/createComment.dto';
 import { CreatePostDTO } from '../dtos/createPost.dto';
+import { FollowPostDTO } from '../dtos/followPost.dto';
 import { PostPage } from '../dtos/postPage.dto';
 import { UpdatePostDTO } from '../dtos/updatePost.dto';
 import { VotePostDTO } from '../dtos/votePost.dto';
+import { FollowPostRepository } from '../repositories/followPost.repository';
 import { PostRepository } from '../repositories/post.repository';
 import { PostCommentRepository } from '../repositories/postComment.repository';
 import { PostReplyRepository } from '../repositories/postCommentReply.repository';
@@ -20,6 +22,7 @@ export class PostService {
     private readonly postCommentRepository: PostCommentRepository,
     private readonly postCommentTagRepository: PostCommentTagRepository,
     private readonly postReplyRepository: PostReplyRepository,
+    private readonly folowPostRepository: FollowPostRepository,
   ) {}
 
   async createPost(createPostData: CreatePostDTO, ownerId: string) {
@@ -189,5 +192,36 @@ export class PostService {
   async getAllPost(page: PostPage) {
     const listPosts = this.postRepository.getAllPost(page);
     return listPosts;
+  }
+
+  async followPost(followData: FollowPostDTO) {
+    const user = await this.userService.getUserById(followData.userId);
+    const post = await this.getPostById(followData.postId);
+
+    if (!user) {
+      throw new NotFoundException(
+        `Can not found user with id: ${followData.userId}`,
+      );
+    } else if (!post) {
+      throw new NotFoundException(
+        `Can not find post with id: ${followData.postId}`,
+      );
+    }
+
+    const followPostData = await this.folowPostRepository.getFollowPostById(
+      followData.userId,
+      followData.postId,
+    );
+
+    console.log(followPostData);
+
+    if (!followPostData) {
+      const votePost = await this.folowPostRepository.followPost(followData);
+      await this.folowPostRepository.save(votePost);
+    } else {
+      await this.folowPostRepository.unfollowPost(followData);
+    }
+
+    return true;
   }
 }
