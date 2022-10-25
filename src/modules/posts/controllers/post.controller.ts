@@ -125,7 +125,7 @@ export class PostController {
     return postReply;
   }
 
-  @Get('/all')
+  @Get('/allPost')
   async getAllPostWithNoLogin(@Body() page: PostPage) {
     const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
       new ReturnResult<PagedData<PostWithMoreInfo>>();
