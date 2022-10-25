@@ -149,7 +149,15 @@ export class UsersService {
   async getUserByIdWithMoreInfo(id: string) {
     const user = await this.userRepository.getUserById(id);
     const listPost = await this.postService.getAllPublicPostByUserId(id);
-    return { ...user, posts: listPost };
+    const numberOfFolllow = await this.userFollowRepository.countMyFollower(id);
+    const numberOfFolllowUser =
+      await this.userFollowRepository.countMyFollowUser(id);
+    return {
+      ...user,
+      posts: listPost,
+      follower: numberOfFolllow,
+      following: numberOfFolllowUser,
+    };
   }
 
   async getUserByToken(token: string): Promise<User> {
