@@ -5,6 +5,7 @@ export class UserWithMoreInfo extends User {
   posts: Post[];
   follower: number;
   following: number;
+  isFollowing?: boolean;
 }
 
 export function getUserWithImageLink(user: UserWithMoreInfo | User) {

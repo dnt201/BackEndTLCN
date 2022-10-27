@@ -160,6 +160,20 @@ export class UsersService {
     };
   }
 
+  async getUserByIdWithLoginAccount(userViewId: string, myId: string) {
+    const user = await this.getUserByIdWithMoreInfo(userViewId);
+
+    const isFollow = await this.userFollowRepository.getFollowUserData(
+      myId,
+      userViewId,
+    );
+
+    return {
+      ...user,
+      isFollowing: isFollow ? true : false,
+    };
+  }
+
   async getUserByToken(token: string): Promise<User> {
     return await this.userRepository.getUserByToken(token);
   }

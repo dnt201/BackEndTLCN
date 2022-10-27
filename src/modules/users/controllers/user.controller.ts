@@ -101,11 +101,21 @@ export class UsersController {
   }
 
   @Get('/:id')
-  async getUserById(@Param() { id }) {
+  async getUserByIdWithNoLogin(@Param() { id }) {
     const user = await this.usersService.getUserByIdWithMoreInfo(id);
-    if (!user) throw new NotFoundException(`Not found user with id: ${id}`);
+    if (!user?.id) throw new NotFoundException(`Not found user with id: ${id}`);
     return getUserWithImageLink(user);
     return user;
+  }
+
+  @Get('/info/:id')
+  @UseGuards(JwtAuthenticationGuard)
+  async getUserByIdWithLogin(@Req() request: RequestWithUser, @Param() { id }) {
+    const me = request.user.id;
+    const user = await this.usersService.getUserByIdWithLoginAccount(id, me);
+    if (!user?.id) throw new NotFoundException(`Not found user with id: ${id}`);
+    return getUserWithImageLink(user);
+    // return user;
   }
 
   @Post('follow')
