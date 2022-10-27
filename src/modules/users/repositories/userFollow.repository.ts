@@ -89,4 +89,16 @@ export class UserFollowRepository extends Repository<UserFollow> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async getFollowUserData(userId: string, userFollowId: string) {
+    try {
+      const followUserData = await this.findOne({
+        where: [{ userId: userId, userFollowId: userFollowId }],
+        relations: ['follower'],
+      });
+      return followUserData;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }
