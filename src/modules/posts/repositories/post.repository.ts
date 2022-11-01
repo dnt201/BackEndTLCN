@@ -185,4 +185,48 @@ export class PostRepository extends Repository<Post> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async getAllPublicPostByCategoryId(categoryId: string, page: PostPage) {
+    const orderQuery =
+      page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);
+
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<PostWithMoreInfo> =
+      new PagedData<PostWithMoreInfo>();
+
+    try {
+      const listPost = await this.find({
+        where: [
+          {
+            category: {
+              id: categoryId,
+            },
+            isPublic: true,
+          },
+        ],
+        relations: ['owner', 'category', 'tags'],
+        order: orderQuery,
+        take: takeQuery,
+        skip: (skipQuery - 1) * takeQuery,
+      });
+      const listPostWithData = listPost.map((data) =>
+        ConvertPostWithMoreInfo(data),
+      );
+
+      const totalPost = await this.count();
+
+      dataReturn.data = listPostWithData;
+      dataReturn.page = new Page(
+        takeQuery,
+        skipQuery,
+        totalPost,
+        page?.order ?? [],
+      );
+      return dataReturn;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }

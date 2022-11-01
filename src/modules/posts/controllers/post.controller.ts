@@ -7,10 +7,12 @@ import {
   ClassSerializerInterceptor,
   Controller,
   Get,
+  Headers,
   Param,
   Post,
   Put,
   Req,
+  UnauthorizedException,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -23,6 +25,8 @@ import JwtAuthenticationGuard from 'src/auth/guards/jwt-authentication.guard';
 import { PagedData } from 'src/common/dto/PageData';
 import { PostPage } from '../dtos/postPage.dto';
 import { PostWithMoreInfo } from '../dtos/PostWithMoreInfo.dto';
+import { getTypeHeader } from 'src/utils/getTypeHeader';
+import { HeaderNotification } from 'src/common/constants/HeaderNotification.constant';
 
 @Controller('post')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -125,39 +129,95 @@ export class PostController {
     return postReply;
   }
 
-  @Get('/allPost')
-  async getAllPostWithNoLogin(@Body() page: PostPage) {
+  @Get('/all')
+  async getAllPostWithNoLogin(@Headers() headers, @Body() page: PostPage) {
     const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
       new ReturnResult<PagedData<PostWithMoreInfo>>();
+    const data = getTypeHeader(headers);
 
-    const listPost = await this.postService.getAllPost(page);
+    if (data.message === HeaderNotification.WRONG_AUTHORIZATION) {
+      throw new UnauthorizedException();
+    } else {
+      const listPost = await this.postService.getAllPost(page);
 
-    dataReturn.result = listPost;
-    dataReturn.message = null;
+      if (data.message === HeaderNotification.TRUE_AUTHORIZATION) {
+        const userId = data.result;
+        const listPostWithFollowInfo = await Promise.all(
+          listPost.data.map(async (data) => {
+            const isFollow = this.postService.getFollowPostById(
+              String(userId),
+              data.id,
+            );
+            return { ...data, isFollow: isFollow ? true : false };
+          }),
+        );
+        listPost.data = listPostWithFollowInfo;
+      }
 
-    return dataReturn;
+      dataReturn.result = listPost;
+      dataReturn.message = null;
+      return dataReturn;
+    }
   }
 
-  @Get('/all')
-  @UseGuards(JwtAuthenticationGuard)
-  async getAllPostWithLogin(
-    @Req() request: RequestWithUser,
+  // @Get('/all')
+  // @UseGuards(JwtAuthenticationGuard)
+  // async getAllPostWithLogin(
+  //   @Req() request: RequestWithUser,
+  //   @Body() page: PostPage,
+  // ) {
+  //   const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
+  //     new ReturnResult<PagedData<PostWithMoreInfo>>();
+
+  //   const userId = request.user.id;
+  //   const listPost = await this.postService.getAllPostWithLoginAccount(
+  //     page,
+  //     userId,
+  //   );
+  //   // const listPost = await this.postService.getAllPost(page);
+
+  //   dataReturn.result = listPost;
+  //   dataReturn.message = null;
+
+  //   return dataReturn;
+  // }
+
+  @Get('/all-by-category/:id')
+  async getAllPostWithCategory(
+    @Headers() headers,
+    @Param('id') categoryId: string,
     @Body() page: PostPage,
   ) {
     const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
       new ReturnResult<PagedData<PostWithMoreInfo>>();
+    const data = getTypeHeader(headers);
 
-    const userId = request.user.id;
-    const listPost = await this.postService.getAllPostWithLoginAccount(
-      page,
-      userId,
-    );
-    // const listPost = await this.postService.getAllPost(page);
+    if (data.message === HeaderNotification.WRONG_AUTHORIZATION) {
+      throw new UnauthorizedException();
+    } else {
+      const listPost = await this.postService.getAllPostWithCategory(
+        categoryId,
+        page,
+      );
 
-    dataReturn.result = listPost;
-    dataReturn.message = null;
+      if (data.message === HeaderNotification.TRUE_AUTHORIZATION) {
+        const userId = data.result;
+        const listPostWithFollowInfo = await Promise.all(
+          listPost.data.map(async (data) => {
+            const isFollow = this.postService.getFollowPostById(
+              String(userId),
+              data.id,
+            );
+            return { ...data, isFollow: isFollow ? true : false };
+          }),
+        );
+        listPost.data = listPostWithFollowInfo;
+      }
 
-    return dataReturn;
+      dataReturn.result = listPost;
+      dataReturn.message = null;
+      return dataReturn;
+    }
   }
 
   @Post('/:id/follow')
