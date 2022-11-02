@@ -46,6 +46,9 @@ export class Post implements ICreated, IModified, IDeleted {
   @Column({ default: 'false' })
   deleted: boolean;
 
+  @Column({ default: 0 })
+  vote: number;
+
   @OneToMany(() => PostVote, (postVote: PostVote) => postVote.post)
   public postVotes: PostVote[];
 

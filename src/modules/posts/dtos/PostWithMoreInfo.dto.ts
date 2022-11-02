@@ -13,4 +13,6 @@ export class PostWithMoreInfo {
   category: Category;
   tags: PostTag[];
   isFollow?: boolean;
+  like: number;
+  comment: number;
 }

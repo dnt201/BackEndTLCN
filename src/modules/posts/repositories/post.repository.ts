@@ -14,7 +14,7 @@ import { CategoryService } from '../../categories/services/category.service';
 import { PostTagService } from '../services/postTag.service';
 import { UpdatePostDTO } from '../dtos/updatePost.dto';
 import { PostPage } from '../dtos/postPage.dto';
-import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
+// import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
 import { PostWithMoreInfo } from '../dtos/PostWithMoreInfo.dto';
 import { ConvertPostWithMoreInfo } from 'src/utils/convertPostWithMoreInfo';
 import { PagedData } from 'src/common/dto/PageData';
@@ -133,9 +133,6 @@ export class PostRepository extends Repository<Post> {
   }
 
   async getAllPost(page: PostPage) {
-    const orderQuery =
-      page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);
-
     const takeQuery = page.size ?? 10;
     const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
 
@@ -143,25 +140,46 @@ export class PostRepository extends Repository<Post> {
       new PagedData<PostWithMoreInfo>();
 
     try {
-      const listPost = await this.find({
-        relations: ['owner', 'category', 'tags'],
-        order: orderQuery,
-        take: takeQuery,
-        skip: (skipQuery - 1) * takeQuery,
-      });
-      const listPostWithData = listPost.map((data) =>
+      // const listPost = await this.find({
+      //   relations: ['owner', 'category', 'tags'],
+      //   order: orderQuery,
+      //   take: takeQuery,
+      //   skip: (skipQuery - 1) * takeQuery,
+      // });
+
+      const listPostQuery = await this.createQueryBuilder('post')
+        .where('post.isPublic = :isPublic', { isPublic: true })
+        .leftJoin('post.postComments', 'PostComment')
+        .leftJoin('PostComment.postReplies', 'PostReply')
+        .leftJoin('post.owner', 'User')
+        .leftJoin('post.category', 'Category')
+        .leftJoin('post.tags', 'PostTag')
+        .loadRelationCountAndMap('post.commentCount', 'post.postComments')
+        .loadRelationCountAndMap(
+          'post.replyCount',
+          'post.postComments.postReplies',
+        )
+        .orderBy('post.vote', 'DESC')
+        .take(takeQuery)
+        .skip((skipQuery - 1) * takeQuery)
+        .select([
+          'post',
+          'PostComment',
+          'PostReply',
+          'User',
+          'Category',
+          'PostTag',
+        ])
+        .getMany();
+
+      const listPostWithData = listPostQuery.map((data) =>
         ConvertPostWithMoreInfo(data),
       );
 
       const totalPost = await this.count();
 
       dataReturn.data = listPostWithData;
-      dataReturn.page = new Page(
-        takeQuery,
-        skipQuery,
-        totalPost,
-        page?.order ?? [],
-      );
+      dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
       return dataReturn;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
@@ -187,9 +205,6 @@ export class PostRepository extends Repository<Post> {
   }
 
   async getAllPublicPostByCategoryId(categoryId: string, page: PostPage) {
-    const orderQuery =
-      page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);
-
     const takeQuery = page.size ?? 10;
     const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
 
@@ -197,33 +212,118 @@ export class PostRepository extends Repository<Post> {
       new PagedData<PostWithMoreInfo>();
 
     try {
-      const listPost = await this.find({
-        where: [
-          {
-            category: {
-              id: categoryId,
-            },
-            isPublic: true,
-          },
-        ],
-        relations: ['owner', 'category', 'tags'],
-        order: orderQuery,
-        take: takeQuery,
-        skip: (skipQuery - 1) * takeQuery,
-      });
-      const listPostWithData = listPost.map((data) =>
+      // const listPost = await this.find({
+      //   where: [
+      //     {
+      //       category: {
+      //         id: categoryId,
+      //       },
+      //       isPublic: true,
+      //     },
+      //   ],
+      //   relations: ['owner', 'category', 'tags'],
+      //   order: { vote: 'DESC' },
+      //   take: takeQuery,
+      //   skip: (skipQuery - 1) * takeQuery,
+      // });
+
+      const listPostQuery = await this.createQueryBuilder('post')
+        .where('post.isPublic = :isPublic', { isPublic: true })
+        .leftJoin('post.postComments', 'PostComment')
+        .leftJoin('PostComment.postReplies', 'PostReply')
+        .leftJoin('post.owner', 'User')
+        .leftJoin('post.category', 'Category')
+        .where('Category.id = :categoryId', { categoryId: categoryId })
+        .leftJoin('post.tags', 'PostTag')
+        .loadRelationCountAndMap('post.commentCount', 'post.postComments')
+        .loadRelationCountAndMap(
+          'post.replyCount',
+          'post.postComments.postReplies',
+        )
+        .orderBy('post.vote', 'DESC')
+        .take(takeQuery)
+        .skip((skipQuery - 1) * takeQuery)
+        .select([
+          'post',
+          'PostComment',
+          'PostReply',
+          'User',
+          'Category',
+          'PostTag',
+        ])
+        .getMany();
+
+      const listPostWithData = listPostQuery.map((data) =>
         ConvertPostWithMoreInfo(data),
       );
 
-      const totalPost = await this.count();
+      const totalPost = await this.count({ where: { isPublic: true } });
 
       dataReturn.data = listPostWithData;
-      dataReturn.page = new Page(
-        takeQuery,
-        skipQuery,
-        totalPost,
-        page?.order ?? [],
+      dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
+      return dataReturn;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getAllPublicPostByPostTagId(postTags: string[], page: PostPage) {
+    const takeQuery = page?.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<PostWithMoreInfo> =
+      new PagedData<PostWithMoreInfo>();
+
+    try {
+      // const listPost = await this.find({
+      //   where: [
+      //     {
+      //       tags: {
+      //         id: In(postTags),
+      //       },
+      //       isPublic: true,
+      //     },
+      //   ],
+      //   relations: ['owner', 'category', 'tags'],
+      //   order: { vote: 'DESC' },
+      //   take: takeQuery,
+      //   skip: (skipQuery - 1) * takeQuery,
+      // });
+
+      const listPostQuery = await this.createQueryBuilder('post')
+        .where('post.isPublic = :isPublic', { isPublic: true })
+        .leftJoin('post.postComments', 'PostComment')
+        .leftJoin('PostComment.postReplies', 'PostReply')
+        .leftJoin('post.owner', 'User')
+        .leftJoin('post.category', 'Category')
+        .leftJoin('post.tags', 'PostTag')
+        .where('PostTag.id IN(:...ids)', { ids: postTags })
+        .loadRelationCountAndMap('post.commentCount', 'post.postComments')
+        .loadRelationCountAndMap(
+          'post.replyCount',
+          'post.postComments.postReplies',
+        )
+        .orderBy('post.vote', 'DESC')
+        .take(takeQuery)
+        .skip((skipQuery - 1) * takeQuery)
+        .select([
+          'post',
+          'PostComment',
+          'PostReply',
+          'User',
+          'Category',
+          'PostTag',
+        ])
+        .getMany();
+
+      const listPostWithData = listPostQuery.map((data) =>
+        ConvertPostWithMoreInfo(data),
       );
+
+      const totalPost = await this.count({ where: { isPublic: true } });
+
+      dataReturn.data = listPostWithData;
+      dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
       return dataReturn;
     } catch (error) {
       throw new InternalServerErrorException(error.message);

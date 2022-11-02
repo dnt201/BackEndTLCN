@@ -22,7 +22,6 @@ export function getTypeHeader(headers): ReturnResult<object> {
       dataReturn.message = HeaderNotification.TRUE_AUTHORIZATION;
       dataReturn.result = data.id;
     } catch (error) {
-      // console.log(error.message);
       dataReturn.message = HeaderNotification.WRONG_AUTHORIZATION;
     }
   }
