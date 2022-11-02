@@ -261,6 +261,41 @@ export class PostController {
     }
   }
 
+  @Get('/all-by-user/:id')
+  async getAllPostWithUser(
+    @Headers() headers,
+    @Param('id') userId: string,
+    @Body() page: PostPage,
+  ) {
+    const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
+      new ReturnResult<PagedData<PostWithMoreInfo>>();
+    const data = getTypeHeader(headers);
+
+    if (data.message === HeaderNotification.WRONG_AUTHORIZATION) {
+      throw new UnauthorizedException();
+    } else {
+      const listPost = await this.postService.getAllPostWithUser(userId, page);
+
+      if (data.message === HeaderNotification.TRUE_AUTHORIZATION) {
+        const userId = data.result;
+        const listPostWithFollowInfo = await Promise.all(
+          listPost.data.map(async (data) => {
+            const isFollow = this.postService.getFollowPostById(
+              String(userId),
+              data.id,
+            );
+            return { ...data, isFollow: isFollow ? true : false };
+          }),
+        );
+        listPost.data = listPostWithFollowInfo;
+      }
+
+      dataReturn.result = listPost;
+      dataReturn.message = null;
+      return dataReturn;
+    }
+  }
+
   @Post('/:id/follow')
   @UseGuards(JwtAuthenticationGuard)
   async followPost(

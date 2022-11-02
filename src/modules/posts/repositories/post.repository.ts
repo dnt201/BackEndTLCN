@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 
 import { Post } from '../entities/post.entity';
 import { CreatePostDTO } from '../dtos/createPost.dto';
@@ -257,7 +257,14 @@ export class PostRepository extends Repository<Post> {
         ConvertPostWithMoreInfo(data),
       );
 
-      const totalPost = await this.count({ where: { isPublic: true } });
+      const totalPost = await this.count({
+        where: {
+          isPublic: true,
+          category: {
+            id: categoryId,
+          },
+        },
+      });
 
       dataReturn.data = listPostWithData;
       dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
@@ -320,7 +327,64 @@ export class PostRepository extends Repository<Post> {
         ConvertPostWithMoreInfo(data),
       );
 
-      const totalPost = await this.count({ where: { isPublic: true } });
+      const totalPost = await this.count({
+        where: {
+          isPublic: true,
+          tags: {
+            id: In(postTags),
+          },
+        },
+      });
+
+      dataReturn.data = listPostWithData;
+      dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
+      return dataReturn;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getAllPublicPostByUser(userId: string, page: PostPage) {
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<PostWithMoreInfo> =
+      new PagedData<PostWithMoreInfo>();
+
+    try {
+      const listPostQuery = await this.createQueryBuilder('post')
+        .where('post.isPublic = :isPublic', { isPublic: true })
+        .leftJoin('post.postComments', 'PostComment')
+        .leftJoin('PostComment.postReplies', 'PostReply')
+        .leftJoin('post.owner', 'User')
+        .where('User.id = :userId', { userId: userId })
+        .leftJoin('post.category', 'Category')
+        .leftJoin('post.tags', 'PostTag')
+        .loadRelationCountAndMap('post.commentCount', 'post.postComments')
+        .loadRelationCountAndMap(
+          'post.replyCount',
+          'post.postComments.postReplies',
+        )
+        .orderBy('post.vote', 'DESC')
+        .take(takeQuery)
+        .skip((skipQuery - 1) * takeQuery)
+        .select([
+          'post',
+          'PostComment',
+          'PostReply',
+          'User',
+          'Category',
+          'PostTag',
+        ])
+        .getMany();
+
+      const listPostWithData = listPostQuery.map((data) =>
+        ConvertPostWithMoreInfo(data),
+      );
+
+      const totalPost = await this.count({
+        where: { isPublic: true, owner: { id: userId } },
+      });
 
       dataReturn.data = listPostWithData;
       dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);

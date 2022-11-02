@@ -273,6 +273,14 @@ export class PostService {
     return listPosts;
   }
 
+  async getAllPostWithUser(userId: string, page: PostPage) {
+    const listPosts = await this.postRepository.getAllPublicPostByUser(
+      userId,
+      page,
+    );
+    return listPosts;
+  }
+
   async getAllPostWithPostTag(postTags: string[], page: PostPage) {
     const listPosts = await this.postRepository.getAllPublicPostByPostTagId(
       postTags,

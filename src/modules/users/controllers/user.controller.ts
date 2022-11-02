@@ -1,4 +1,5 @@
 import {
+  Headers,
   Body,
   ClassSerializerInterceptor,
   Controller,
@@ -12,6 +13,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  UnauthorizedException,
 } from '@nestjs/common';
 // import { RoleGuard } from 'src/auth/guards/role.guard';
 
@@ -29,6 +31,8 @@ import { UserPage } from '../dtos/userPage.dto';
 import { ReturnResult } from 'src/common/dto/ReturnResult';
 import { PagedData } from 'src/common/dto/PageData';
 import { User } from '../entities/user.entity';
+import { getTypeHeader } from 'src/utils/getTypeHeader';
+import { HeaderNotification } from 'src/common/constants/HeaderNotification.constant';
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -101,22 +105,39 @@ export class UsersController {
   }
 
   @Get('/:id')
-  async getUserByIdWithNoLogin(@Param() { id }) {
+  async getUserById(@Headers() headers, @Param() { id }) {
+    const data = getTypeHeader(headers);
+
+    if (data.message === HeaderNotification.WRONG_AUTHORIZATION) {
+      throw new UnauthorizedException();
+    } else if (data.message === HeaderNotification.NOT_FOUND_AUTHORIZATION) {
+      const user = await this.usersService.getUserByIdWithMoreInfo(id);
+      if (!user?.id)
+        throw new NotFoundException(`Not found user with id: ${id}`);
+      return getUserWithImageLink(user);
+    } else if (data.message === HeaderNotification.TRUE_AUTHORIZATION) {
+      const me = String(data.result);
+      const user = await this.usersService.getUserByIdWithLoginAccount(id, me);
+      if (!user?.id)
+        throw new NotFoundException(`Not found user with id: ${id}`);
+      return getUserWithImageLink(user);
+    }
+
     const user = await this.usersService.getUserByIdWithMoreInfo(id);
     if (!user?.id) throw new NotFoundException(`Not found user with id: ${id}`);
     return getUserWithImageLink(user);
     return user;
   }
 
-  @Get('/info/:id')
-  @UseGuards(JwtAuthenticationGuard)
-  async getUserByIdWithLogin(@Req() request: RequestWithUser, @Param() { id }) {
-    const me = request.user.id;
-    const user = await this.usersService.getUserByIdWithLoginAccount(id, me);
-    if (!user?.id) throw new NotFoundException(`Not found user with id: ${id}`);
-    return getUserWithImageLink(user);
-    // return user;
-  }
+  // @Get('/info/:id')
+  // @UseGuards(JwtAuthenticationGuard)
+  // async getUserByIdWithLogin(@Req() request: RequestWithUser, @Param() { id }) {
+  //   const me = request.user.id;
+  //   const user = await this.usersService.getUserByIdWithLoginAccount(id, me);
+  //   if (!user?.id) throw new NotFoundException(`Not found user with id: ${id}`);
+  //   return getUserWithImageLink(user);
+  //   return user;
+  // }
 
   @Post('follow')
   @UseGuards(JwtAuthenticationGuard)
