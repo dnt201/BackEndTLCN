@@ -68,6 +68,7 @@ export class PostService {
   async votePost(votePostData: VotePostDTO) {
     const user = await this.userService.getUserById(votePostData.userId);
     const post = await this.getPostById(votePostData.postId);
+    const upVote = votePostData.type === true ? 1 : -1;
 
     if (!user) {
       throw new NotFoundException(
@@ -86,13 +87,23 @@ export class PostService {
     if (!votePost) {
       const votePost = await this.postVoteRepository.votePost(votePostData);
       await this.postVoteRepository.save(votePost);
+      await this.postRepository.update(votePostData.postId, {
+        vote: post.vote + upVote,
+      });
     } else if (votePost.type === votePostData.type) {
       await this.postVoteRepository.deleteVote(
         votePostData.userId,
         votePostData.postId,
       );
+
+      await this.postRepository.update(votePostData.postId, {
+        vote: post.vote - upVote,
+      });
     } else {
       await this.postVoteRepository.updateVotePost(votePostData);
+      await this.postRepository.update(votePostData.postId, {
+        vote: post.vote + 2 * upVote,
+      });
     }
 
     return true;
@@ -240,8 +251,6 @@ export class PostService {
       followData.postId,
     );
 
-    console.log(followPostData);
-
     if (!followPostData) {
       const votePost = await this.folowPostRepository.followPost(followData);
       await this.folowPostRepository.save(votePost);
@@ -259,6 +268,14 @@ export class PostService {
   async getAllPostWithCategory(categoryId: string, page: PostPage) {
     const listPosts = await this.postRepository.getAllPublicPostByCategoryId(
       categoryId,
+      page,
+    );
+    return listPosts;
+  }
+
+  async getAllPostWithPostTag(postTags: string[], page: PostPage) {
+    const listPosts = await this.postRepository.getAllPublicPostByPostTagId(
+      postTags,
       page,
     );
     return listPosts;

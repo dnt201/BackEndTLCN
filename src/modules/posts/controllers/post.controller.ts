@@ -27,6 +27,7 @@ import { PostPage } from '../dtos/postPage.dto';
 import { PostWithMoreInfo } from '../dtos/PostWithMoreInfo.dto';
 import { getTypeHeader } from 'src/utils/getTypeHeader';
 import { HeaderNotification } from 'src/common/constants/HeaderNotification.constant';
+import { GetAllPostByPostTag } from '../dtos/getAllPostByPostTag.dto';
 
 @Controller('post')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -130,7 +131,7 @@ export class PostController {
   }
 
   @Get('/all')
-  async getAllPostWithNoLogin(@Headers() headers, @Body() page: PostPage) {
+  async getAllPost(@Headers() headers, @Body() page: PostPage) {
     const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
       new ReturnResult<PagedData<PostWithMoreInfo>>();
     const data = getTypeHeader(headers);
@@ -197,6 +198,46 @@ export class PostController {
     } else {
       const listPost = await this.postService.getAllPostWithCategory(
         categoryId,
+        page,
+      );
+
+      if (data.message === HeaderNotification.TRUE_AUTHORIZATION) {
+        const userId = data.result;
+        const listPostWithFollowInfo = await Promise.all(
+          listPost.data.map(async (data) => {
+            const isFollow = this.postService.getFollowPostById(
+              String(userId),
+              data.id,
+            );
+            return { ...data, isFollow: isFollow ? true : false };
+          }),
+        );
+        listPost.data = listPostWithFollowInfo;
+      }
+
+      dataReturn.result = listPost;
+      dataReturn.message = null;
+      return dataReturn;
+    }
+  }
+
+  @Get('/all-by-posttag')
+  async getAllPostWithPostTag(
+    @Headers() headers,
+    @Body() body: GetAllPostByPostTag,
+  ) {
+    const listPostTags = body.postTags;
+    const page = body.page ?? null;
+
+    const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
+      new ReturnResult<PagedData<PostWithMoreInfo>>();
+    const data = getTypeHeader(headers);
+
+    if (data.message === HeaderNotification.WRONG_AUTHORIZATION) {
+      throw new UnauthorizedException();
+    } else {
+      const listPost = await this.postService.getAllPostWithPostTag(
+        listPostTags,
         page,
       );
 

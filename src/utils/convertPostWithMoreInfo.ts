@@ -16,6 +16,10 @@ export function ConvertPostWithMoreInfo(data) {
     },
     category: data.category,
     tags: data.tags,
+    like: data.vote,
+    comment:
+      (data.commentCount ? data.commentCount : 0) +
+      (data.replyCount ? data.replyCount : 0),
     isFollow: false,
   };
   return dataReturn;
