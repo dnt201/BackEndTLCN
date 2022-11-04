@@ -281,6 +281,14 @@ export class PostService {
     return listPosts;
   }
 
+  async getAllPostVoteWithUserId(userId: string, page: PostPage) {
+    const listPosts = await this.postVoteRepository.getAllPostVoteWithUserId(
+      userId,
+      page,
+    );
+    return listPosts;
+  }
+
   async getAllPostWithPostTag(postTags: string[], page: PostPage) {
     const listPosts = await this.postRepository.getAllPublicPostByPostTagId(
       postTags,
