@@ -6,8 +6,10 @@ import {
   Get,
   NotFoundException,
   Param,
+  PayloadTooLargeException,
   Post,
   Put,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -21,6 +23,7 @@ import { FindOneParams } from 'src/utils/findOneParams';
 import { PostTagPage } from '../dtos/posttagPage.dto';
 import { PagedData } from 'src/common/dto/PageData';
 import { ReturnResult } from 'src/common/dto/ReturnResult';
+import { FilesInterceptor } from 'src/modules/files/interceptors/file.interceptor';
 
 @Controller('post/post-tag')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -41,8 +44,37 @@ export class PostTagController {
 
   @Post('create')
   @UseGuards(PermissionGuard(ListPermission.AddPostTag))
-  async createPostTag(@Body() postTagData: CreatePostTagDTO): Promise<PostTag> {
-    return await this.postTagService.createPostTag(postTagData);
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/post-tag',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
+  async createPostTag(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() postTagData: CreatePostTagDTO,
+  ) {
+    const postTag = await this.postTagService.createPostTag(postTagData);
+    if (file) {
+      await this.postTagService.addThumbnail(postTag.id, {
+        path: file.path,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
+    }
+    return await this.postTagService.getPostTagById(postTag.id);
   }
 
   @Put('edit/:id')

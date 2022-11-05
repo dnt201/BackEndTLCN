@@ -1,6 +1,8 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoryModule } from '../categories/category.module';
+import { FileModule } from '../files/file.module';
+import { SettingModule } from '../settings/setting.module';
 import { UsersModule } from '../users/users.module';
 import { PostController } from './controllers/post.controller';
 import { PostTagController } from './controllers/postTag.controller';
@@ -33,6 +35,8 @@ import { PostTagService } from './services/postTag.service';
       UserFollowPost,
     ]),
     forwardRef(() => UsersModule),
+    forwardRef(() => SettingModule),
+    FileModule,
     CategoryModule,
   ],
   providers: [
