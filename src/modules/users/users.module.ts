@@ -28,7 +28,7 @@ import { PostModule } from '../posts/post.module';
     ConfigModule,
     EmailModule,
     FileModule,
-    SettingModule,
+    forwardRef(() => SettingModule),
     forwardRef(() => PostModule),
   ],
   providers: [
