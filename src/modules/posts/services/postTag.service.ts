@@ -1,4 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { FileDTO } from 'src/modules/files/dtos/file.dto';
+import { FileService } from 'src/modules/files/services/file.service';
+import { getPostTagWithThumbnailLink } from 'src/utils/getImageLinkUrl';
 import { CreatePostTagDTO } from '../dtos/createPostTag.dto';
 import { PostTagPage } from '../dtos/posttagPage.dto';
 import { UpdatePostTagDTO } from '../dtos/updatePostTag.dto';
@@ -6,7 +9,10 @@ import { PostTagRepository } from '../repositories/postTag.repository';
 
 @Injectable()
 export class PostTagService {
-  constructor(private readonly postTagRepository: PostTagRepository) {}
+  constructor(
+    private readonly postTagRepository: PostTagRepository,
+    private readonly fileService: FileService,
+  ) {}
 
   async createPostTag(createPostTagData: CreatePostTagDTO) {
     const existPostTag = await this.postTagRepository.getPostSameInfo(
@@ -61,10 +67,21 @@ export class PostTagService {
   }
 
   async getPostTagById(id: string) {
-    return await this.postTagRepository.getPostTagById(id);
+    const data = await this.postTagRepository.getPostTagById(id);
+    return getPostTagWithThumbnailLink(data);
   }
 
   async getAllPostTags(page: PostTagPage) {
     return await this.postTagRepository.getAllPostTags(page);
+  }
+
+  async addThumbnail(postTagId: string, fileData: FileDTO) {
+    console.log(postTagId);
+    const thumbnail = await this.fileService.saveLocalFileData(fileData);
+    await this.postTagRepository.update(postTagId, {
+      thumbnailId: thumbnail.id,
+    });
+    // console.log(this.postTagRepository.getPostTagById(postTagId));
+    return `http://localhost:3000/file/${thumbnail.id}`;
   }
 }

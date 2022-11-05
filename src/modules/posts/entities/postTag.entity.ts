@@ -1,5 +1,13 @@
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Post } from './post.entity';
+import { File } from 'src/modules/files/entities/file.entity';
 
 @Entity('PostTag')
 export class PostTag {
@@ -15,6 +23,13 @@ export class PostTag {
   @Column({ unique: true })
   public colorCode: string;
 
+  @Column({ nullable: true })
+  public thumbnailId?: string;
+
   @ManyToMany(() => Post, (post: Post) => post.tags)
   public posts: Post[];
+
+  @JoinColumn({ name: 'thumbnailId' })
+  @OneToOne(() => File, { nullable: true })
+  public thumbnail?: File;
 }

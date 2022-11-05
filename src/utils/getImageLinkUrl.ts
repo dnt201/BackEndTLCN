@@ -1,4 +1,5 @@
 import { Post } from 'src/modules/posts/entities/post.entity';
+import { PostTag } from 'src/modules/posts/entities/postTag.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 
 export class UserWithMoreInfo extends User {
@@ -36,4 +37,14 @@ export function getUserWithImageLink(user: UserWithMoreInfo | User) {
     };
   });
   return { ...data, posts: listPost };
+}
+
+export function getPostTagWithThumbnailLink(postTag: PostTag) {
+  return {
+    ...postTag,
+    thumbnailId: undefined,
+    thumbnailLink: postTag.thumbnailId
+      ? `http://localhost:3000/file/${postTag.thumbnailId}`
+      : null,
+  };
 }
