@@ -289,6 +289,14 @@ export class PostService {
     return listPosts;
   }
 
+  async getAllPostFollowWithUserId(userId: string, page: PostPage) {
+    const listPosts = await this.folowPostRepository.getAllPostFollowWithUserId(
+      userId,
+      page,
+    );
+    return listPosts;
+  }
+
   async getAllPostWithPostTag(postTags: string[], page: PostPage) {
     const listPosts = await this.postRepository.getAllPublicPostByPostTagId(
       postTags,

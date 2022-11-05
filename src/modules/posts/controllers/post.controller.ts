@@ -327,6 +327,37 @@ export class PostController {
     return dataReturn;
   }
 
+  @Get('all-post-follow')
+  @UseGuards(JwtAuthenticationGuard)
+  async getAllPostFollowByUserId(
+    @Req() request: RequestWithUser,
+    @Body() page: PostPage,
+  ) {
+    const userId = request.user.id;
+
+    const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
+      new ReturnResult<PagedData<PostWithMoreInfo>>();
+
+    const listPost = await this.postService.getAllPostFollowWithUserId(
+      userId,
+      page,
+    );
+    const listPostWithFollowInfo = await Promise.all(
+      listPost.data.map(async (data) => {
+        const isFollow = this.postService.getFollowPostById(
+          String(userId),
+          data.id,
+        );
+        return { ...data, isFollow: isFollow ? true : false };
+      }),
+    );
+    listPost.data = listPostWithFollowInfo;
+
+    dataReturn.result = listPost;
+    dataReturn.message = null;
+    return dataReturn;
+  }
+
   @Post('/:id/follow')
   @UseGuards(JwtAuthenticationGuard)
   async followPost(
