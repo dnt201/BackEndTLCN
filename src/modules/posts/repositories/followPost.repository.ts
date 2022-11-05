@@ -4,8 +4,13 @@ import {
   BadRequestException,
   HttpStatus,
 } from '@nestjs/common';
+import { Page } from 'src/common/dto/Page';
+import { PagedData } from 'src/common/dto/PageData';
+import { ConvertPostWithMoreInfo } from 'src/utils/convertPostWithMoreInfo';
 import { DataSource, Repository } from 'typeorm';
 import { FollowPostDTO } from '../dtos/followPost.dto';
+import { PostPage } from '../dtos/postPage.dto';
+import { PostWithMoreInfo } from '../dtos/PostWithMoreInfo.dto';
 import { UserFollowPost } from '../entities/followPost.entity';
 
 @Injectable()
@@ -43,6 +48,59 @@ export class FollowPostRepository extends Repository<UserFollowPost> {
       if (error.code === HttpStatus.BAD_REQUEST)
         throw new BadRequestException(error.message);
       else throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getAllPostFollowWithUserId(userId: string, page: PostPage) {
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<PostWithMoreInfo> =
+      new PagedData<PostWithMoreInfo>();
+
+    try {
+      const listPostQuery = await this.createQueryBuilder('User_Follow_Post')
+        .where('User_Follow_Post.userId = :userId', { userId: userId })
+        .leftJoin('User_Follow_Post.post', 'Post')
+        .leftJoin('Post.postComments', 'PostComment')
+        .leftJoin('PostComment.postReplies', 'PostReply')
+        .leftJoin('Post.owner', 'User')
+        .leftJoin('Post.category', 'Category')
+        .leftJoin('Post.tags', 'PostTag')
+        .loadRelationCountAndMap('Post.commentCount', 'Post.postComments')
+        .loadRelationCountAndMap(
+          'Post.replyCount',
+          'Post.postComments.postReplies',
+        )
+        .orderBy('Post.dateModified', 'DESC')
+        .take(takeQuery)
+        .skip((skipQuery - 1) * takeQuery)
+        .select([
+          'User_Follow_Post',
+          'Post',
+          'PostComment',
+          'PostReply',
+          'User',
+          'Category',
+          'PostTag',
+        ])
+        .getMany();
+
+      console.log(listPostQuery);
+
+      const listPost = listPostQuery.map((data) => data.post);
+      const listPostWithData = listPost.map((data) =>
+        ConvertPostWithMoreInfo(data),
+      );
+
+      const totalPost = await this.count();
+
+      dataReturn.data = listPostWithData;
+      dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
+      return dataReturn;
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException(error.message);
     }
   }
 }
