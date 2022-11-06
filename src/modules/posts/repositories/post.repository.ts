@@ -154,6 +154,8 @@ export class PostRepository extends Repository<Post> {
         .leftJoin('post.owner', 'User')
         .leftJoin('post.category', 'Category')
         .leftJoin('post.tags', 'PostTag')
+        .leftJoin('post.postViews', 'PostView')
+        .loadRelationCountAndMap('post.views', 'post.postViews')
         .loadRelationCountAndMap('post.commentCount', 'post.postComments')
         .loadRelationCountAndMap(
           'post.replyCount',
@@ -176,7 +178,7 @@ export class PostRepository extends Repository<Post> {
         ConvertPostWithMoreInfo(data),
       );
 
-      const totalPost = await this.count();
+      const totalPost = await this.count({ where: { isPublic: true } });
 
       dataReturn.data = listPostWithData;
       dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
@@ -235,6 +237,8 @@ export class PostRepository extends Repository<Post> {
         .leftJoin('post.category', 'Category')
         .where('Category.id = :categoryId', { categoryId: categoryId })
         .leftJoin('post.tags', 'PostTag')
+        .leftJoin('post.postViews', 'PostView')
+        .loadRelationCountAndMap('post.views', 'post.postViews')
         .loadRelationCountAndMap('post.commentCount', 'post.postComments')
         .loadRelationCountAndMap(
           'post.replyCount',
@@ -305,6 +309,8 @@ export class PostRepository extends Repository<Post> {
         .leftJoin('post.category', 'Category')
         .leftJoin('post.tags', 'PostTag')
         .where('PostTag.id IN(:...ids)', { ids: postTags })
+        .leftJoin('post.postViews', 'PostView')
+        .loadRelationCountAndMap('post.views', 'post.postViews')
         .loadRelationCountAndMap('post.commentCount', 'post.postComments')
         .loadRelationCountAndMap(
           'post.replyCount',
@@ -360,6 +366,8 @@ export class PostRepository extends Repository<Post> {
         .where('User.id = :userId', { userId: userId })
         .leftJoin('post.category', 'Category')
         .leftJoin('post.tags', 'PostTag')
+        .leftJoin('post.postViews', 'PostView')
+        .loadRelationCountAndMap('post.views', 'post.postViews')
         .loadRelationCountAndMap('post.commentCount', 'post.postComments')
         .loadRelationCountAndMap(
           'post.replyCount',

@@ -67,6 +67,8 @@ export class FollowPostRepository extends Repository<UserFollowPost> {
         .leftJoin('Post.owner', 'User')
         .leftJoin('Post.category', 'Category')
         .leftJoin('Post.tags', 'PostTag')
+        .leftJoin('Post.postViews', 'PostView')
+        .loadRelationCountAndMap('Post.views', 'Post.postViews')
         .loadRelationCountAndMap('Post.commentCount', 'Post.postComments')
         .loadRelationCountAndMap(
           'Post.replyCount',
@@ -86,8 +88,6 @@ export class FollowPostRepository extends Repository<UserFollowPost> {
         ])
         .getMany();
 
-      console.log(listPostQuery);
-
       const listPost = listPostQuery.map((data) => data.post);
       const listPostWithData = listPost.map((data) =>
         ConvertPostWithMoreInfo(data),
@@ -99,7 +99,6 @@ export class FollowPostRepository extends Repository<UserFollowPost> {
       dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
       return dataReturn;
     } catch (error) {
-      console.log(error);
       throw new InternalServerErrorException(error.message);
     }
   }
