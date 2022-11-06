@@ -393,4 +393,34 @@ export class PostRepository extends Repository<Post> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async getPostDetailById(postId: string, userId: string) {
+    try {
+      let PostData;
+      if (userId === undefined) {
+        PostData = await this.findOne({
+          where: [{ id: postId, isPublic: true }],
+          relations: ['owner', 'category', 'tags'],
+        });
+      } else {
+        PostData = await this.findOne({
+          where: [
+            { id: postId, isPublic: true },
+            {
+              id: postId,
+              isPublic: false,
+              owner: {
+                id: userId,
+              },
+            },
+          ],
+          relations: ['owner', 'category', 'tags'],
+        });
+      }
+
+      return PostData ? ConvertPostWithMoreInfo(PostData) : PostData;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }

@@ -15,4 +15,5 @@ export class PostWithMoreInfo {
   isFollow?: boolean;
   like: number;
   comment: number;
+  view: number;
 }

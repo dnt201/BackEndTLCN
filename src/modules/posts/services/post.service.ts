@@ -10,6 +10,7 @@ import { CreatePostDTO } from '../dtos/createPost.dto';
 import { FollowPostDTO } from '../dtos/followPost.dto';
 import { PostPage } from '../dtos/postPage.dto';
 import { UpdatePostDTO } from '../dtos/updatePost.dto';
+import { ViewPostDTO } from '../dtos/viewPost.dto';
 import { VotePostDTO } from '../dtos/votePost.dto';
 import { FollowPostRepository } from '../repositories/followPost.repository';
 import { PostRepository } from '../repositories/post.repository';
@@ -17,11 +18,13 @@ import { PostCommentRepository } from '../repositories/postComment.repository';
 import { PostReplyRepository } from '../repositories/postCommentReply.repository';
 import { PostCommentTagRepository } from '../repositories/postCommentTag.repository';
 import { PostVoteRepository } from './../repositories/postVote.repository';
+import { PostViewRepository } from './../repositories/postView.repository';
 
 @Injectable()
 export class PostService {
   constructor(
     private readonly postRepository: PostRepository,
+    private readonly postViewRepository: PostViewRepository,
     private readonly postVoteRepository: PostVoteRepository,
     private readonly postCommentRepository: PostCommentRepository,
     private readonly postCommentTagRepository: PostCommentTagRepository,
@@ -63,6 +66,29 @@ export class PostService {
 
   async getPostById(postId: string) {
     return await this.postRepository.getPostById(postId);
+  }
+
+  async viewPost(viewPostData: ViewPostDTO) {
+    const post = await this.postRepository.getPostById(viewPostData.postId);
+    const viewPost = await this.postViewRepository.getPostViewById(
+      viewPostData,
+    );
+
+    if (post.owner.id !== viewPostData.userId) {
+      if (!viewPost) {
+        if (viewPostData.userId) {
+          const viewPost = await this.postViewRepository.viewPost(viewPostData);
+          await this.postViewRepository.save(viewPost);
+        }
+      } else {
+        await this.postViewRepository.save({
+          ...viewPost,
+          dateModified: new Date(),
+        });
+      }
+    }
+
+    return this.getPostDetailById(viewPostData);
   }
 
   async votePost(votePostData: VotePostDTO) {
@@ -289,6 +315,14 @@ export class PostService {
     return listPosts;
   }
 
+  async getAllPostViewWithUserId(userId: string, page: PostPage) {
+    const listPosts = await this.postViewRepository.getAllPostViewWithUserId(
+      userId,
+      page,
+    );
+    return listPosts;
+  }
+
   async getAllPostFollowWithUserId(userId: string, page: PostPage) {
     const listPosts = await this.folowPostRepository.getAllPostFollowWithUserId(
       userId,
@@ -303,5 +337,19 @@ export class PostService {
       page,
     );
     return listPosts;
+  }
+
+  async getPostDetailById(viewPostData: ViewPostDTO) {
+    const PostDetail = await this.postRepository.getPostDetailById(
+      viewPostData.postId,
+      viewPostData.userId,
+    );
+
+    if (!PostDetail)
+      throw new NotFoundException(
+        `Not found post with id ${viewPostData.postId}`,
+      );
+
+    return PostDetail;
   }
 }
