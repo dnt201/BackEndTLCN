@@ -76,12 +76,10 @@ export class PostTagService {
   }
 
   async addThumbnail(postTagId: string, fileData: FileDTO) {
-    console.log(postTagId);
     const thumbnail = await this.fileService.saveLocalFileData(fileData);
     await this.postTagRepository.update(postTagId, {
       thumbnailId: thumbnail.id,
     });
-    // console.log(this.postTagRepository.getPostTagById(postTagId));
     return `http://localhost:3000/file/${thumbnail.id}`;
   }
 }

@@ -83,7 +83,6 @@ export class PostViewRepository extends Repository<PostView> {
       dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
       return dataReturn;
     } catch (error) {
-      console.log(error);
       throw new InternalServerErrorException(error.message);
     }
   }
