@@ -19,6 +19,7 @@ import {
 import { PostTag } from './postTag.entity';
 import { PostVote } from './postVote.entity';
 import { PostComment } from './postComment.entity';
+import { PostView } from './postView.entity';
 
 @Entity('Posts')
 export class Post implements ICreated, IModified, IDeleted {
@@ -68,4 +69,7 @@ export class Post implements ICreated, IModified, IDeleted {
   @ManyToMany(() => PostTag, (postTag: PostTag) => postTag.posts)
   @JoinTable()
   public tags: PostTag[];
+
+  @OneToMany(() => PostView, (postView: PostView) => postView.post)
+  public postViews: PostView[];
 }

@@ -17,6 +17,7 @@ export function ConvertPostWithMoreInfo(data) {
     category: data.category,
     tags: data.tags,
     like: data.vote,
+    view: data.views,
     comment:
       (data.commentCount ? data.commentCount : 0) +
       (data.replyCount ? data.replyCount : 0),

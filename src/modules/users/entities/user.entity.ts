@@ -25,6 +25,7 @@ import { PostVote } from 'src/modules/posts/entities/postVote.entity';
 import { PostComment } from 'src/modules/posts/entities/postComment.entity';
 import { PostCommentTag } from 'src/modules/posts/entities/postCommentTag.entity';
 import { PostReply } from 'src/modules/posts/entities/postReply.entity';
+import { PostView } from 'src/modules/posts/entities/postView.entity';
 
 @Entity('User')
 export class User implements ICreated, IModified, IDeleted {
@@ -114,6 +115,9 @@ export class User implements ICreated, IModified, IDeleted {
 
   @OneToMany(() => PostVote, (postVote: PostVote) => postVote.user)
   public postVotes: PostVote[];
+
+  @OneToMany(() => PostView, (postView: PostView) => postView.user)
+  public postViews: PostView[];
 
   @OneToMany(() => PostComment, (postComment: PostComment) => postComment.user)
   public postComments: PostComment[];

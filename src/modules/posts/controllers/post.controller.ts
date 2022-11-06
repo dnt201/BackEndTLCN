@@ -327,6 +327,37 @@ export class PostController {
     return dataReturn;
   }
 
+  @Get('all-post-view')
+  @UseGuards(JwtAuthenticationGuard)
+  async getAllPostViewByUserId(
+    @Req() request: RequestWithUser,
+    @Body() page: PostPage,
+  ) {
+    const userId = request.user.id;
+
+    const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
+      new ReturnResult<PagedData<PostWithMoreInfo>>();
+
+    const listPost = await this.postService.getAllPostViewWithUserId(
+      userId,
+      page,
+    );
+    const listPostWithFollowInfo = await Promise.all(
+      listPost.data.map(async (data) => {
+        const isFollow = this.postService.getFollowPostById(
+          String(userId),
+          data.id,
+        );
+        return { ...data, isFollow: isFollow ? true : false };
+      }),
+    );
+    listPost.data = listPostWithFollowInfo;
+
+    dataReturn.result = listPost;
+    dataReturn.message = null;
+    return dataReturn;
+  }
+
   @Get('all-post-follow')
   @UseGuards(JwtAuthenticationGuard)
   async getAllPostFollowByUserId(
@@ -374,6 +405,21 @@ export class PostController {
       postId: postId,
     });
     return followData;
+  }
+
+  @Get('/:id')
+  async getPostDetail(@Headers() headers, @Param('id') postId: string) {
+    const data = getTypeHeader(headers);
+
+    if (data.message === HeaderNotification.WRONG_AUTHORIZATION) {
+      throw new UnauthorizedException();
+    } else {
+      const listPost = await this.postService.viewPost({
+        userId: data.result ? String(data.result) : undefined,
+        postId: postId,
+      });
+      return listPost;
+    }
   }
 
   private async isExistPost(postId: string): Promise<boolean> {
