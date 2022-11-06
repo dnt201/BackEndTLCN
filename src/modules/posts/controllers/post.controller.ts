@@ -1,6 +1,6 @@
 import { ReturnResult } from 'src/common/dto/ReturnResult';
 import { CreatePostCommentDTO } from './../dtos/createComment.dto';
-import { UpdatePostDTO } from './../dtos/updatePost.dto';
+// import { UpdatePostDTO } from './../dtos/updatePost.dto';
 import {
   BadRequestException,
   Body,
@@ -9,15 +9,17 @@ import {
   Get,
   Headers,
   Param,
+  PayloadTooLargeException,
   Post,
   Put,
   Req,
   UnauthorizedException,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { PostService } from '../services/post.service';
-import { CreatePostDTO } from './../dtos/createPost.dto';
+import { CreatePostDTO, CreatePostInput } from './../dtos/createPost.dto';
 import { PermissionGuard } from 'src/auth/guards/permission.guard';
 import RequestWithUser from 'src/auth/interfaces/requestWithUser.interface';
 import { Post_Permission as ListPermission } from '../permission/permission';
@@ -28,6 +30,8 @@ import { PostWithMoreInfo } from '../dtos/PostWithMoreInfo.dto';
 import { getTypeHeader } from 'src/utils/getTypeHeader';
 import { HeaderNotification } from 'src/common/constants/HeaderNotification.constant';
 import { GetAllPostByPostTag } from '../dtos/getAllPostByPostTag.dto';
+import { FilesInterceptor } from 'src/modules/files/interceptors/file.interceptor';
+import { UpdatePostDTO } from '../dtos/updatePost.dto';
 
 @Controller('post')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -36,13 +40,45 @@ export class PostController {
 
   @Post('create')
   @UseGuards(JwtAuthenticationGuard)
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/post',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
   async createPost(
     @Req() request: RequestWithUser,
-    @Body() createPostData: CreatePostDTO,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createPostInput: CreatePostInput,
   ) {
     const ownerId = request.user.id;
+    const createPostData: CreatePostDTO = {
+      ...createPostInput,
+      tags: createPostInput.tags.split(','),
+    };
+
     const post = await this.postService.createPost(createPostData, ownerId);
-    return post;
+
+    if (file) {
+      await this.postService.addThumbnail(post.id, {
+        path: file.path,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
+    }
+    return await this.postService.getPostById(post.id);
   }
 
   @Put('approve/:id')
@@ -54,17 +90,50 @@ export class PostController {
 
   @Put('edit/:id')
   @UseGuards(JwtAuthenticationGuard)
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/post',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
   async editPost(
     @Req() request: RequestWithUser,
     @Param('id') postId: string,
-    @Body() updatePostData: UpdatePostDTO,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createPostInput: CreatePostInput,
   ) {
     const post = await this.postService.getPostById(postId);
     if (post.owner.id !== request.user.id) {
       throw new BadRequestException(`You can not edit this post`);
     }
-    const postUpdated = await this.postService.editPost(postId, updatePostData);
-    return postUpdated;
+
+    const updatePostData: UpdatePostDTO = {
+      ...createPostInput,
+      tags: createPostInput.tags.split(','),
+    };
+
+    await this.postService.editPost(postId, updatePostData);
+    if (file) {
+      await this.postService.editImage(postId, {
+        path: file.path,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
+    }
+
+    return await this.postService.getPostById(postId);
   }
 
   @Post('/:id/vote')

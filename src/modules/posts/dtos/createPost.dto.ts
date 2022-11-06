@@ -15,3 +15,10 @@ export class CreatePostDTO {
   @IsString({ each: true })
   public tags: string[];
 }
+
+export class CreatePostInput {
+  public title: string;
+  public content: string;
+  public category: string;
+  public tags: string;
+}

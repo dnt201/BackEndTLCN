@@ -13,6 +13,7 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -20,6 +21,7 @@ import { PostTag } from './postTag.entity';
 import { PostVote } from './postVote.entity';
 import { PostComment } from './postComment.entity';
 import { PostView } from './postView.entity';
+import { File } from '../../files/entities/file.entity';
 
 @Entity('Posts')
 export class Post implements ICreated, IModified, IDeleted {
@@ -50,6 +52,9 @@ export class Post implements ICreated, IModified, IDeleted {
   @Column({ default: 0 })
   vote: number;
 
+  @Column({ nullable: true })
+  public thumbnailId?: string;
+
   @OneToMany(() => PostVote, (postVote: PostVote) => postVote.post)
   public postVotes: PostVote[];
 
@@ -72,4 +77,8 @@ export class Post implements ICreated, IModified, IDeleted {
 
   @OneToMany(() => PostView, (postView: PostView) => postView.post)
   public postViews: PostView[];
+
+  @JoinColumn({ name: 'thumbnailId' })
+  @OneToOne(() => File, { nullable: true })
+  public thumbnail?: File;
 }
