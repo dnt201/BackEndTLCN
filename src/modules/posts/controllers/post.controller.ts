@@ -9,15 +9,17 @@ import {
   Get,
   Headers,
   Param,
+  PayloadTooLargeException,
   Post,
   Put,
   Req,
   UnauthorizedException,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { PostService } from '../services/post.service';
-import { CreatePostDTO } from './../dtos/createPost.dto';
+import { CreatePostDTO, CreatePostInput } from './../dtos/createPost.dto';
 import { PermissionGuard } from 'src/auth/guards/permission.guard';
 import RequestWithUser from 'src/auth/interfaces/requestWithUser.interface';
 import { Post_Permission as ListPermission } from '../permission/permission';
@@ -28,6 +30,7 @@ import { PostWithMoreInfo } from '../dtos/PostWithMoreInfo.dto';
 import { getTypeHeader } from 'src/utils/getTypeHeader';
 import { HeaderNotification } from 'src/common/constants/HeaderNotification.constant';
 import { GetAllPostByPostTag } from '../dtos/getAllPostByPostTag.dto';
+import { FilesInterceptor } from 'src/modules/files/interceptors/file.interceptor';
 
 @Controller('post')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -36,13 +39,46 @@ export class PostController {
 
   @Post('create')
   @UseGuards(JwtAuthenticationGuard)
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/post',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
   async createPost(
     @Req() request: RequestWithUser,
-    @Body() createPostData: CreatePostDTO,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createPostInput: CreatePostInput,
   ) {
     const ownerId = request.user.id;
+    const createPostData: CreatePostDTO = {
+      ...createPostInput,
+      tags: createPostInput.tags.split(','),
+    };
+    console.log(createPostData);
+
     const post = await this.postService.createPost(createPostData, ownerId);
-    return post;
+
+    if (file) {
+      await this.postService.addThumbnail(post.id, {
+        path: file.path,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
+    }
+    return await this.postService.getPostById(post.id);
   }
 
   @Put('approve/:id')

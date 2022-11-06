@@ -19,6 +19,9 @@ import { PostReplyRepository } from '../repositories/postCommentReply.repository
 import { PostCommentTagRepository } from '../repositories/postCommentTag.repository';
 import { PostVoteRepository } from './../repositories/postVote.repository';
 import { PostViewRepository } from './../repositories/postView.repository';
+import { FileDTO } from 'src/modules/files/dtos/file.dto';
+import { FileService } from 'src/modules/files/services/file.service';
+import { getPostWithThumbnailLink } from 'src/utils/getImageLinkUrl';
 
 @Injectable()
 export class PostService {
@@ -30,6 +33,7 @@ export class PostService {
     private readonly postCommentTagRepository: PostCommentTagRepository,
     private readonly postReplyRepository: PostReplyRepository,
     private readonly folowPostRepository: FollowPostRepository,
+    private readonly fileService: FileService,
 
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
@@ -65,7 +69,8 @@ export class PostService {
   }
 
   async getPostById(postId: string) {
-    return await this.postRepository.getPostById(postId);
+    const post = await this.postRepository.getPostById(postId);
+    return getPostWithThumbnailLink(post);
   }
 
   async viewPost(viewPostData: ViewPostDTO) {
@@ -351,5 +356,13 @@ export class PostService {
       );
 
     return PostDetail;
+  }
+
+  async addThumbnail(postTagId: string, fileData: FileDTO) {
+    const thumbnail = await this.fileService.saveLocalFileData(fileData);
+    await this.postRepository.update(postTagId, {
+      thumbnailId: thumbnail.id,
+    });
+    return `http://localhost:3000/file/${thumbnail.id}`;
   }
 }

@@ -48,3 +48,17 @@ export function getPostTagWithThumbnailLink(postTag: PostTag) {
       : null,
   };
 }
+
+export function getPostWithThumbnailLink(post: Post) {
+  return {
+    ...post,
+    deleted: undefined,
+    dateCreated: undefined,
+    dateModified: undefined,
+    dateDeleted: undefined,
+    thumbnailId: undefined,
+    thumbnailLink: post.thumbnailId
+      ? `http://localhost:3000/file/${post.thumbnailId}`
+      : null,
+  };
+}
