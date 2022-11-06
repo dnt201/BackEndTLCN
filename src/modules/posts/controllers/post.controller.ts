@@ -1,6 +1,6 @@
 import { ReturnResult } from 'src/common/dto/ReturnResult';
 import { CreatePostCommentDTO } from './../dtos/createComment.dto';
-import { UpdatePostDTO } from './../dtos/updatePost.dto';
+// import { UpdatePostDTO } from './../dtos/updatePost.dto';
 import {
   BadRequestException,
   Body,
@@ -31,6 +31,7 @@ import { getTypeHeader } from 'src/utils/getTypeHeader';
 import { HeaderNotification } from 'src/common/constants/HeaderNotification.constant';
 import { GetAllPostByPostTag } from '../dtos/getAllPostByPostTag.dto';
 import { FilesInterceptor } from 'src/modules/files/interceptors/file.interceptor';
+import { UpdatePostDTO } from '../dtos/updatePost.dto';
 
 @Controller('post')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -67,7 +68,6 @@ export class PostController {
       ...createPostInput,
       tags: createPostInput.tags.split(','),
     };
-    console.log(createPostData);
 
     const post = await this.postService.createPost(createPostData, ownerId);
 
@@ -90,17 +90,50 @@ export class PostController {
 
   @Put('edit/:id')
   @UseGuards(JwtAuthenticationGuard)
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/post',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
   async editPost(
     @Req() request: RequestWithUser,
     @Param('id') postId: string,
-    @Body() updatePostData: UpdatePostDTO,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createPostInput: CreatePostInput,
   ) {
     const post = await this.postService.getPostById(postId);
     if (post.owner.id !== request.user.id) {
       throw new BadRequestException(`You can not edit this post`);
     }
-    const postUpdated = await this.postService.editPost(postId, updatePostData);
-    return postUpdated;
+
+    const updatePostData: UpdatePostDTO = {
+      ...createPostInput,
+      tags: createPostInput.tags.split(','),
+    };
+
+    await this.postService.editPost(postId, updatePostData);
+    if (file) {
+      await this.postService.editImage(postId, {
+        path: file.path,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
+    }
+
+    return await this.postService.getPostById(postId);
   }
 
   @Post('/:id/vote')

@@ -22,6 +22,7 @@ import { PostViewRepository } from './../repositories/postView.repository';
 import { FileDTO } from 'src/modules/files/dtos/file.dto';
 import { FileService } from 'src/modules/files/services/file.service';
 import { getPostWithThumbnailLink } from 'src/utils/getImageLinkUrl';
+import { CompareTwoImage } from 'src/utils/compareTwoImage';
 
 @Injectable()
 export class PostService {
@@ -358,11 +359,24 @@ export class PostService {
     return PostDetail;
   }
 
-  async addThumbnail(postTagId: string, fileData: FileDTO) {
+  async addThumbnail(postId: string, fileData: FileDTO) {
     const thumbnail = await this.fileService.saveLocalFileData(fileData);
-    await this.postRepository.update(postTagId, {
+    await this.postRepository.update(postId, {
       thumbnailId: thumbnail.id,
     });
     return `http://localhost:3000/file/${thumbnail.id}`;
+  }
+
+  async editImage(postId: string, fileData: FileDTO) {
+    const post = await this.getPostById(postId);
+    let thumbnailLink = post.thumbnailLink;
+    if (thumbnailLink) {
+      const part = thumbnailLink.split('/');
+      thumbnailLink = part[part.length - 1];
+    }
+    const oldImage = await this.fileService.getFileById(thumbnailLink);
+
+    if (await CompareTwoImage(oldImage.path, fileData.path)) return;
+    else await this.addThumbnail(postId, fileData);
   }
 }

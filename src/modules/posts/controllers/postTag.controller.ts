@@ -79,8 +79,27 @@ export class PostTagController {
 
   @Put('edit/:id')
   @UseGuards(PermissionGuard(ListPermission.EditPostTag))
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/post-tag',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
   async updatePostTag(
-    @Param() { id }: FindOneParams,
+    @Param() { id },
+    @UploadedFile() file: Express.Multer.File,
     @Body() postTagData: UpdatePostTagDTO,
   ) {
     const existedPostTag = await this.postTagService.getPostTagById(id);
@@ -88,7 +107,16 @@ export class PostTagController {
     if (!existedPostTag)
       throw new NotFoundException(`Not found PostTag with id ${id}`);
 
-    return await this.postTagService.updatePostTag(id, postTagData);
+    await this.postTagService.updatePostTag(id, postTagData);
+    if (file) {
+      await this.postTagService.editImage(id, {
+        path: file.path,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
+    }
+
+    return this.postTagService.getPostTagById(id);
   }
 
   @Delete('delete/:id')
