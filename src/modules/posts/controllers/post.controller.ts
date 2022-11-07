@@ -32,6 +32,8 @@ import { HeaderNotification } from 'src/common/constants/HeaderNotification.cons
 import { GetAllPostByPostTag } from '../dtos/getAllPostByPostTag.dto';
 import { FilesInterceptor } from 'src/modules/files/interceptors/file.interceptor';
 import { UpdatePostDTO } from '../dtos/updatePost.dto';
+import { CreatePostReplyDTO } from '../dtos/createReply.dto';
+import { CommentPage } from '../dtos/commentPage.dto';
 
 @Controller('post')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -182,7 +184,7 @@ export class PostController {
   async replyPost(
     @Req() request: RequestWithUser,
     @Param('id') commentId: string,
-    @Body() createPostCommentData: CreatePostCommentDTO,
+    @Body() createPostReplyData: CreatePostReplyDTO,
   ) {
     const userReplyId = request.user.id;
 
@@ -192,7 +194,7 @@ export class PostController {
     }
 
     const postReply = await this.postService.replyPost({
-      ...createPostCommentData,
+      ...createPostReplyData,
       userCommentId: userReplyId,
       commentId: commentId,
     });
@@ -474,6 +476,16 @@ export class PostController {
       postId: postId,
     });
     return followData;
+  }
+
+  @Get('/:id/get-all-comment')
+  async getAllComment(@Param('id') postId: string, @Body() page: CommentPage) {
+    const post = await this.postService.getPostById(postId);
+    if (!post) {
+      throw new BadRequestException(`Not found post with id ${postId}`);
+    }
+
+    return await this.postService.getAllCommentByPostId(postId, page);
   }
 
   @Get('/:id')

@@ -23,6 +23,9 @@ import { FileDTO } from 'src/modules/files/dtos/file.dto';
 import { FileService } from 'src/modules/files/services/file.service';
 import { getPostWithThumbnailLink } from 'src/utils/getImageLinkUrl';
 import { CompareTwoImage } from 'src/utils/compareTwoImage';
+import { PostReplyTagRepository } from '../repositories/postReplyTag.repository';
+import { CreatePostReplyDTO } from '../dtos/createReply.dto';
+import { CommentPage } from '../dtos/commentPage.dto';
 
 @Injectable()
 export class PostService {
@@ -33,6 +36,7 @@ export class PostService {
     private readonly postCommentRepository: PostCommentRepository,
     private readonly postCommentTagRepository: PostCommentTagRepository,
     private readonly postReplyRepository: PostReplyRepository,
+    private readonly postReplyTagRepository: PostReplyTagRepository,
     private readonly folowPostRepository: FollowPostRepository,
     private readonly fileService: FileService,
 
@@ -156,7 +160,7 @@ export class PostService {
 
     const postComment = await this.postCommentRepository.createComment({
       postId: createData.postId,
-      userId: createData.userCommentId,
+      senderId: createData.userCommentId,
       content: createData.commentContent,
     });
     await this.postCommentRepository.save(postComment);
@@ -173,9 +177,8 @@ export class PostService {
 
           const postCommentTag =
             await this.postCommentTagRepository.createCommentTag({
-              userId: userTag,
+              senderId: userTag,
               commentId: postComment.commentId,
-              typeOfComment: 'Comment',
             });
 
           await this.postCommentTagRepository.save(postCommentTag);
@@ -192,9 +195,12 @@ export class PostService {
     return await this.postCommentRepository.getCommentById(commentId);
   }
 
-  async replyPost(createData: CreatePostCommentDTO) {
+  async replyPost(createData: CreatePostReplyDTO) {
     const user = await this.userService.getUserById(createData.userCommentId);
     const comment = await this.getCommentById(createData.commentId);
+
+    console.log(comment);
+
     if (!user) {
       throw new NotFoundException(
         `Can not found user with id: ${createData.userCommentId}`,
@@ -207,8 +213,8 @@ export class PostService {
 
     const postReply = await this.postReplyRepository.createReply({
       commentId: createData.commentId,
-      userId: createData.userCommentId,
-      content: createData.commentContent,
+      senderId: createData.userCommentId,
+      content: createData.replyContent,
     });
     await this.postReplyRepository.save(postReply);
 
@@ -223,10 +229,9 @@ export class PostService {
           }
 
           const postCommentTag =
-            await this.postCommentTagRepository.createCommentTag({
-              userId: userTag,
-              commentId: postReply.replyId,
-              typeOfComment: 'Reply',
+            await this.postReplyTagRepository.createReplyTag({
+              senderId: userTag,
+              replyId: postReply.replyId,
             });
 
           await this.postCommentTagRepository.save(postCommentTag);
@@ -343,6 +348,15 @@ export class PostService {
       page,
     );
     return listPosts;
+  }
+
+  async getAllCommentByPostId(postId: string, page: CommentPage) {
+    const listComment = await this.postCommentRepository.getAllCommentByPostId(
+      postId,
+      page,
+    );
+
+    return listComment;
   }
 
   async getPostDetailById(viewPostData: ViewPostDTO) {

@@ -8,35 +8,35 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { PostComment } from './postComment.entity';
+import { PostReply } from './postReply.entity';
 
-@Entity('Post_Comment_Tag')
-export class PostCommentTag implements ICreated {
+@Entity('Post_Reply_Tag')
+export class PostReplyTag implements ICreated {
   @PrimaryGeneratedColumn('uuid')
-  public commentTagId?: string;
+  public replyTagId?: string;
 
   @Column()
   public senderId: string;
 
   @Column()
-  public commentId: string;
+  public replyId: string;
 
   @CreateDateColumn()
-  public dateCreated: Date;
+  dateCreated: Date;
 
-  @ManyToOne(() => User, (user: User) => user.postCommentTags, {
+  @ManyToOne(() => User, (user: User) => user.postReplyTags, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'senderId' })
   public sender: User;
 
   @ManyToOne(
-    () => PostComment,
-    (postComment: PostComment) => postComment.postCommentTags,
+    () => PostReply,
+    (postReply: PostReply) => postReply.postReplyTags,
     {
       onDelete: 'CASCADE',
     },
   )
-  @JoinColumn({ name: 'commentId' })
-  public postComment: PostComment;
+  @JoinColumn({ name: 'replyId' })
+  public postReply: PostReply;
 }

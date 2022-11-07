@@ -1,7 +1,7 @@
 import { PostWithMoreInfo } from 'src/modules/posts/dtos/PostWithMoreInfo.dto';
 
 export function ConvertPostWithMoreInfo(data) {
-  const requestToFile = 'http://localhost:3000/file';
+  const requestToFile = 'http://localhost:3000/file/';
 
   const dataReturn: PostWithMoreInfo = {
     id: data.id,
