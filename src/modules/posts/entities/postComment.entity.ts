@@ -11,6 +11,7 @@ import { Post } from './post.entity';
 import { IModified } from 'src/common/model/IModified.interface';
 import { User } from 'src/modules/users/entities/user.entity';
 import { PostReply } from './postReply.entity';
+import { PostCommentTag } from './postCommentTag.entity';
 
 @Entity('Post_Comment')
 export class PostComment implements IModified {
@@ -21,7 +22,7 @@ export class PostComment implements IModified {
   postId: string;
 
   @Column()
-  userId: string;
+  senderId: string;
 
   @Column()
   content: string;
@@ -38,9 +39,15 @@ export class PostComment implements IModified {
   @ManyToOne(() => User, (user: User) => user.postComments, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'userId' })
-  public user: User;
+  @JoinColumn({ name: 'senderId' })
+  public sender: User;
 
   @OneToMany(() => PostReply, (postReply: PostReply) => postReply.postComment)
   public postReplies: PostReply[];
+
+  @OneToMany(
+    () => PostCommentTag,
+    (postCommentTag: PostCommentTag) => postCommentTag.postComment,
+  )
+  public postCommentTags: PostCommentTag[];
 }

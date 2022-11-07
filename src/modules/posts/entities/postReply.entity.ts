@@ -5,10 +5,12 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { PostComment } from './postComment.entity';
+import { PostReplyTag } from './postReplyTag.entity';
 
 @Entity('Post_Reply')
 export class PostReply implements IModified {
@@ -19,7 +21,7 @@ export class PostReply implements IModified {
   commentId: string;
 
   @Column()
-  userId: string;
+  senderId: string;
 
   @Column()
   content: string;
@@ -37,6 +39,12 @@ export class PostReply implements IModified {
   @ManyToOne(() => User, (user: User) => user.postReplies, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'userId' })
-  public user: User;
+  @JoinColumn({ name: 'senderId' })
+  public sender: User;
+
+  @OneToMany(
+    () => PostReplyTag,
+    (postReplyTag: PostReplyTag) => postReplyTag.postReply,
+  )
+  public postReplyTags: PostReplyTag[];
 }

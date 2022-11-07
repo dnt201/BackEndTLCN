@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { PostReplyDTO } from '../dtos/createComment.dto';
+import { PostReplyDTO } from '../dtos/createReply.dto';
 import { PostReply } from '../entities/postReply.entity';
 
 @Injectable()

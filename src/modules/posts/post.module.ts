@@ -11,6 +11,7 @@ import { Post } from './entities/post.entity';
 import { PostComment } from './entities/postComment.entity';
 import { PostCommentTag } from './entities/postCommentTag.entity';
 import { PostReply } from './entities/postReply.entity';
+import { PostReplyTag } from './entities/postReplyTag.entity';
 import { PostTag } from './entities/postTag.entity';
 import { PostView } from './entities/postView.entity';
 import { PostVote } from './entities/postVote.entity';
@@ -19,6 +20,7 @@ import { PostRepository } from './repositories/post.repository';
 import { PostCommentRepository } from './repositories/postComment.repository';
 import { PostReplyRepository } from './repositories/postCommentReply.repository';
 import { PostCommentTagRepository } from './repositories/postCommentTag.repository';
+import { PostReplyTagRepository } from './repositories/postReplyTag.repository';
 import { PostTagRepository } from './repositories/postTag.repository';
 import { PostViewRepository } from './repositories/postView.repository';
 import { PostVoteRepository } from './repositories/postVote.repository';
@@ -34,6 +36,7 @@ import { PostTagService } from './services/postTag.service';
       PostView,
       PostReply,
       PostComment,
+      PostReplyTag,
       PostCommentTag,
       UserFollowPost,
     ]),
@@ -51,6 +54,7 @@ import { PostTagService } from './services/postTag.service';
     PostReplyRepository,
     FollowPostRepository,
     PostCommentRepository,
+    PostReplyTagRepository,
     PostCommentTagRepository,
     PostService,
   ],
