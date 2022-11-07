@@ -50,4 +50,6 @@ export class PostComment implements IModified {
     (postCommentTag: PostCommentTag) => postCommentTag.postComment,
   )
   public postCommentTags: PostCommentTag[];
+
+  countReply: number;
 }

@@ -25,6 +25,7 @@ import { getPostWithThumbnailLink } from 'src/utils/getImageLinkUrl';
 import { CompareTwoImage } from 'src/utils/compareTwoImage';
 import { PostReplyTagRepository } from '../repositories/postReplyTag.repository';
 import { CreatePostReplyDTO } from '../dtos/createReply.dto';
+import { CommentPage } from '../dtos/commentPage.dto';
 
 @Injectable()
 export class PostService {
@@ -347,6 +348,15 @@ export class PostService {
       page,
     );
     return listPosts;
+  }
+
+  async getAllCommentByPostId(postId: string, page: CommentPage) {
+    const listComment = await this.postCommentRepository.getAllCommentByPostId(
+      postId,
+      page,
+    );
+
+    return listComment;
   }
 
   async getPostDetailById(viewPostData: ViewPostDTO) {

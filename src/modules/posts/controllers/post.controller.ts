@@ -33,6 +33,7 @@ import { GetAllPostByPostTag } from '../dtos/getAllPostByPostTag.dto';
 import { FilesInterceptor } from 'src/modules/files/interceptors/file.interceptor';
 import { UpdatePostDTO } from '../dtos/updatePost.dto';
 import { CreatePostReplyDTO } from '../dtos/createReply.dto';
+import { CommentPage } from '../dtos/commentPage.dto';
 
 @Controller('post')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -475,6 +476,16 @@ export class PostController {
       postId: postId,
     });
     return followData;
+  }
+
+  @Get('/:id/get-all-comment')
+  async getAllComment(@Param('id') postId: string, @Body() page: CommentPage) {
+    const post = await this.postService.getPostById(postId);
+    if (!post) {
+      throw new BadRequestException(`Not found post with id ${postId}`);
+    }
+
+    return await this.postService.getAllCommentByPostId(postId, page);
   }
 
   @Get('/:id')
