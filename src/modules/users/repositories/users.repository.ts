@@ -4,10 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { log } from 'console';
 import { Page } from 'src/common/dto/Page';
 import { PagedData } from 'src/common/dto/PageData';
 import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Index, Like, Not, Repository } from 'typeorm';
 import { CreateUserDTO } from '../dtos/createUser.dto';
 import { UpdateUserDTO } from '../dtos/updateUser.dto';
 import { UserPage } from '../dtos/userPage.dto';
@@ -153,6 +154,28 @@ export class UserRepository extends Repository<User> {
       );
       return dataReturn;
     } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getAllUserForTag(existedIds: string[], matches: string) {
+    try {
+      const listUser = await this.find({
+        where: [{ id: Not(In(existedIds)), username: Like(`%${matches}%`) }],
+        take: 5,
+      });
+
+      return listUser.map((data) => {
+        return {
+          id: data.id,
+          username: data.username,
+          avatarLink: data.avatarId
+            ? `http://localhost:3000/file/${data.avatarId}`
+            : null,
+        };
+      });
+    } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException(error.message);
     }
   }

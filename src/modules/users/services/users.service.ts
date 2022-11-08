@@ -130,6 +130,10 @@ export class UsersService {
     return users;
   }
 
+  async getAllUserForTag(existedIds: string[], matches: string) {
+    return await this.userRepository.getAllUserForTag(existedIds, matches);
+  }
+
   async getAllDeleteUsers(): Promise<User[]> {
     const users = await this.userRepository.find({
       where: [{ deleted: true }],

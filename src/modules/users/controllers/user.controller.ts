@@ -14,6 +14,7 @@ import {
   UseGuards,
   UseInterceptors,
   UnauthorizedException,
+  Query,
 } from '@nestjs/common';
 // import { RoleGuard } from 'src/auth/guards/role.guard';
 
@@ -56,6 +57,13 @@ export class UsersController {
     dataReturn.message = null;
 
     return dataReturn;
+  }
+
+  @Get('/all-for-tag')
+  @UseGuards(JwtAuthenticationGuard)
+  async getAllUserForTag(@Body() { existedIds }, @Query() { name }) {
+    name = name ? name : '';
+    return await this.usersService.getAllUserForTag(existedIds, name);
   }
 
   @Put('/admin/edit/:id')
