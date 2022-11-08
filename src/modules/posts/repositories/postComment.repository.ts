@@ -74,7 +74,6 @@ export class PostCommentRepository extends Repository<PostComment> {
       dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
       return dataReturn;
     } catch (error) {
-      console.log(error);
       throw new InternalServerErrorException(error.message);
     }
 

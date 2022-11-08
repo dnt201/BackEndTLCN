@@ -17,6 +17,11 @@ export class CreatePostReplyDTO {
   public commentId: string;
 }
 
+export class CreatePostReplyInput {
+  public replyContent: string;
+  public userTag: string;
+}
+
 export class PostReplyDTO {
   public senderId: string;
   public commentId: string;

@@ -1,5 +1,8 @@
 import { ReturnResult } from 'src/common/dto/ReturnResult';
-import { CreatePostCommentDTO } from './../dtos/createComment.dto';
+import {
+  CreatePostCommentDTO,
+  CreatePostCommentInput,
+} from './../dtos/createComment.dto';
 // import { UpdatePostDTO } from './../dtos/updatePost.dto';
 import {
   BadRequestException,
@@ -32,7 +35,10 @@ import { HeaderNotification } from 'src/common/constants/HeaderNotification.cons
 import { GetAllPostByPostTag } from '../dtos/getAllPostByPostTag.dto';
 import { FilesInterceptor } from 'src/modules/files/interceptors/file.interceptor';
 import { UpdatePostDTO } from '../dtos/updatePost.dto';
-import { CreatePostReplyDTO } from '../dtos/createReply.dto';
+import {
+  CreatePostReplyDTO,
+  CreatePostReplyInput,
+} from '../dtos/createReply.dto';
 import { CommentPage } from '../dtos/commentPage.dto';
 
 @Controller('post')
@@ -160,10 +166,29 @@ export class PostController {
 
   @Post('/:id/comment')
   @UseGuards(JwtAuthenticationGuard)
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/post-comment',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
   async commentPost(
     @Req() request: RequestWithUser,
     @Param('id') postId: string,
-    @Body() createPostCommentData: CreatePostCommentDTO,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createPostCommentInput: CreatePostCommentInput,
   ) {
     const userCommentId = request.user.id;
 
@@ -171,20 +196,53 @@ export class PostController {
       throw new BadRequestException(`Not found post with id ${postId}`);
     }
 
-    const postComment = await this.postService.commentPost({
-      ...createPostCommentData,
+    const createPostCommentData: CreatePostCommentDTO = {
+      ...createPostCommentInput,
+      userTag: createPostCommentInput.userTag.split(','),
       userCommentId: userCommentId,
       postId: postId,
-    });
-    return postComment;
+    };
+
+    const postComment = await this.postService.commentPost(
+      createPostCommentData,
+    );
+
+    if (file) {
+      await this.postService.addPostCommentImage(postComment.commentId, {
+        path: file.path,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
+    }
+
+    return await this.postService.getCommentById(postComment.commentId);
   }
 
   @Post('/:id/reply')
   @UseGuards(JwtAuthenticationGuard)
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/post-reply',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
   async replyPost(
     @Req() request: RequestWithUser,
     @Param('id') commentId: string,
-    @Body() createPostReplyData: CreatePostReplyDTO,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createPostReplyInput: CreatePostReplyInput,
   ) {
     const userReplyId = request.user.id;
 
@@ -193,12 +251,24 @@ export class PostController {
       throw new BadRequestException(`Not found comment with id ${commentId}`);
     }
 
-    const postReply = await this.postService.replyPost({
-      ...createPostReplyData,
+    const createPostReplyData: CreatePostReplyDTO = {
+      ...createPostReplyInput,
+      userTag: createPostReplyInput.userTag.split(','),
       userCommentId: userReplyId,
       commentId: commentId,
-    });
-    return postReply;
+    };
+
+    const postReply = await this.postService.replyPost(createPostReplyData);
+
+    if (file) {
+      await this.postService.addPostReplyImage(postReply.replyId, {
+        path: file.path,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
+    }
+
+    return await this.postService.getReplyById(postReply.replyId);
   }
 
   @Get('/all')

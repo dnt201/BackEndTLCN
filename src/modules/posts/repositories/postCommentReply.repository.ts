@@ -17,4 +17,13 @@ export class PostReplyRepository extends Repository<PostReply> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async getReplyById(id: string) {
+    try {
+      const postReply = await this.findOne({ where: [{ replyId: id }] });
+      return postReply;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }
