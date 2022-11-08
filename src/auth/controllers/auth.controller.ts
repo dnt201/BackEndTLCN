@@ -11,6 +11,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { getUserWithImageLink } from 'src/utils/getImageLinkUrl';
 
 import { RegisterDTO } from '../dtos/register.dto';
 import JwtAuthenticationGuard from '../guards/jwt-authentication.guard';
@@ -75,5 +76,12 @@ export class AuthController {
   @Post('/activate/:token')
   async activateAccount(@Param() { token }) {
     return await this.authService.activateAccount(token);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthenticationGuard)
+  async getMyInfo(@Req() request: RequestWithUser) {
+    const user = await this.authService.getMyInfo(request.user.id);
+    return user;
   }
 }
