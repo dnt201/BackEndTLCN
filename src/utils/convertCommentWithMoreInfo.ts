@@ -25,7 +25,7 @@ export function ConvertCommentWithMoreInfo(data: CommentWithMoreInfoDTO) {
       username: data.sender.username,
       avatarLink: data.sender.avatarId
         ? `${requestToFile}${data.sender.avatarId}`
-        : '',
+        : null,
     },
     commentTag: [...tempData],
   };

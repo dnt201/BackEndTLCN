@@ -12,7 +12,7 @@ export function ConvertPostWithMoreInfo(data) {
       username: data.owner.username,
       avatarLink: data.owner.avatarId
         ? `${requestToFile}${data.owner.avatarId}`
-        : '',
+        : null,
     },
     category: data.category,
     tags: data.tags,
