@@ -21,7 +21,11 @@ import { PostVoteRepository } from './../repositories/postVote.repository';
 import { PostViewRepository } from './../repositories/postView.repository';
 import { FileDTO } from 'src/modules/files/dtos/file.dto';
 import { FileService } from 'src/modules/files/services/file.service';
-import { getPostWithThumbnailLink } from 'src/utils/getImageLinkUrl';
+import {
+  getCommentWithImageLink,
+  getPostWithThumbnailLink,
+  getReplyWithImageLink,
+} from 'src/utils/getImageLinkUrl';
 import { CompareTwoImage } from 'src/utils/compareTwoImage';
 import { PostReplyTagRepository } from '../repositories/postReplyTag.repository';
 import { CreatePostReplyDTO } from '../dtos/createReply.dto';
@@ -192,14 +196,13 @@ export class PostService {
   }
 
   async getCommentById(commentId: string) {
-    return await this.postCommentRepository.getCommentById(commentId);
+    const comment = await this.postCommentRepository.getCommentById(commentId);
+    return comment ? getCommentWithImageLink(comment) : null;
   }
 
   async replyPost(createData: CreatePostReplyDTO) {
     const user = await this.userService.getUserById(createData.userCommentId);
     const comment = await this.getCommentById(createData.commentId);
-
-    console.log(comment);
 
     if (!user) {
       throw new NotFoundException(
@@ -228,13 +231,14 @@ export class PostService {
             );
           }
 
-          const postCommentTag =
-            await this.postReplyTagRepository.createReplyTag({
+          const postReplyTag = await this.postReplyTagRepository.createReplyTag(
+            {
               senderId: userTag,
               replyId: postReply.replyId,
-            });
+            },
+          );
 
-          await this.postCommentTagRepository.save(postCommentTag);
+          await this.postReplyTagRepository.save(postReplyTag);
         } catch (error) {
           throw new NotFoundException(error.message);
         }
@@ -242,6 +246,11 @@ export class PostService {
     );
 
     return postReply;
+  }
+
+  async getReplyById(replyId: string) {
+    const reply = await this.postReplyRepository.getReplyById(replyId);
+    return reply ? getReplyWithImageLink(reply) : null;
   }
 
   async getAllPost(page: PostPage) {
@@ -393,4 +402,33 @@ export class PostService {
     if (await CompareTwoImage(oldImage.path, fileData.path)) return;
     else await this.addThumbnail(postId, fileData);
   }
+
+  async addPostCommentImage(commentId: string, fileData: FileDTO) {
+    const commentImage = await this.fileService.saveLocalFileData(fileData);
+    await this.postCommentRepository.update(commentId, {
+      imageId: commentImage.id,
+    });
+    return `http://localhost:3000/file/${commentImage.id}`;
+  }
+
+  async addPostReplyImage(replyId: string, fileData: FileDTO) {
+    const replyImage = await this.fileService.saveLocalFileData(fileData);
+    await this.postReplyRepository.update(replyId, {
+      imageId: replyImage.id,
+    });
+    return `http://localhost:3000/file/${replyImage.id}`;
+  }
+
+  // async editPostCommentImage(commentId: string, fileData: FileDTO) {
+  //   const post = await this.getCommentById(commentId);
+  //   let thumbnailLink = post.thumbnailLink;
+  //   if (thumbnailLink) {
+  //     const part = thumbnailLink.split('/');
+  //     thumbnailLink = part[part.length - 1];
+  //   }
+  //   const oldImage = await this.fileService.getFileById(thumbnailLink);
+
+  //   if (await CompareTwoImage(oldImage.path, fileData.path)) return;
+  //   else await this.addThumbnail(postId, fileData);
+  // }
 }

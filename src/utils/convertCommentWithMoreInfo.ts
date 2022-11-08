@@ -10,7 +10,6 @@ export function ConvertCommentWithMoreInfo(data: CommentWithMoreInfoDTO) {
 
   const postCommentTag = data.postCommentTags;
 
-  console.log(tempData);
   postCommentTag.map((data) => {
     tempData.push(new UserFewerDetail(data.sender.id, data.sender.username));
   });

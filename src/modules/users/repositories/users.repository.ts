@@ -4,11 +4,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { log } from 'console';
 import { Page } from 'src/common/dto/Page';
 import { PagedData } from 'src/common/dto/PageData';
 import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
-import { DataSource, In, Index, Like, Not, Repository } from 'typeorm';
+import { DataSource, In, Like, Not, Repository } from 'typeorm';
 import { CreateUserDTO } from '../dtos/createUser.dto';
 import { UpdateUserDTO } from '../dtos/updateUser.dto';
 import { UserPage } from '../dtos/userPage.dto';
@@ -175,7 +174,6 @@ export class UserRepository extends Repository<User> {
         };
       });
     } catch (error) {
-      console.log(error);
       throw new InternalServerErrorException(error.message);
     }
   }

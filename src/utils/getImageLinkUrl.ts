@@ -1,4 +1,6 @@
 import { Post } from 'src/modules/posts/entities/post.entity';
+import { PostComment } from 'src/modules/posts/entities/postComment.entity';
+import { PostReply } from 'src/modules/posts/entities/postReply.entity';
 import { PostTag } from 'src/modules/posts/entities/postTag.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 
@@ -59,6 +61,26 @@ export function getPostWithThumbnailLink(post: Post) {
     thumbnailId: undefined,
     thumbnailLink: post.thumbnailId
       ? `http://localhost:3000/file/${post.thumbnailId}`
+      : null,
+  };
+}
+
+export function getCommentWithImageLink(comment: PostComment) {
+  return {
+    ...comment,
+    imageId: undefined,
+    imageLink: comment.imageId
+      ? `http://localhost:3000/file/${comment.imageId}`
+      : null,
+  };
+}
+
+export function getReplyWithImageLink(reply: PostReply) {
+  return {
+    ...reply,
+    imageId: undefined,
+    imageLink: reply.imageId
+      ? `http://localhost:3000/file/${reply.imageId}`
       : null,
   };
 }
