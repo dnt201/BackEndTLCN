@@ -23,6 +23,15 @@ export class PostCommentRepository extends Repository<PostComment> {
     }
   }
 
+  async updateComment(id: string, updatePostTagData: PostCommentDTO) {
+    try {
+      await this.update(id, updatePostTagData);
+      return await this.getCommentById(id);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
   async getCommentById(id: string) {
     try {
       const postComment = await this.findOne({ where: [{ commentId: id }] });

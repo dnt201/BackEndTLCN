@@ -40,6 +40,10 @@ import {
   CreatePostReplyInput,
 } from '../dtos/createReply.dto';
 import { CommentPage } from '../dtos/commentPage.dto';
+import {
+  UpdatePostCommentDTO,
+  UpdatePostCommentInput,
+} from '../dtos/updatePostComment.dto';
 
 @Controller('post')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -195,10 +199,13 @@ export class PostController {
     if ((await this.isExistPost(postId)) === false) {
       throw new BadRequestException(`Not found post with id ${postId}`);
     }
+    const userTagList = createPostCommentInput.userTag
+      .split(',')
+      .filter((userTag) => userTag !== '');
 
     const createPostCommentData: CreatePostCommentDTO = {
       ...createPostCommentInput,
-      userTag: createPostCommentInput.userTag.split(','),
+      userTag: userTagList,
       userCommentId: userCommentId,
       postId: postId,
     };
@@ -216,6 +223,63 @@ export class PostController {
     }
 
     return await this.postService.getCommentById(postComment.commentId);
+  }
+
+  @Put('comment/edit/:id')
+  @UseGuards(JwtAuthenticationGuard)
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/post-comment',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
+  async editPostComment(
+    @Req() request: RequestWithUser,
+    @Param('id') commentId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() updatePostCommentInput: UpdatePostCommentInput,
+  ) {
+    const userCommentId = request.user.id;
+    const oldComment = await this.postService.getCommentById(commentId);
+
+    if (oldComment.senderId !== userCommentId) {
+      throw new BadRequestException(`You can not edit this comment`);
+    }
+
+    const userTagList = updatePostCommentInput.userTag
+      .split(',')
+      .filter((userTag) => userTag !== '');
+
+    const updatePostCommentData: UpdatePostCommentDTO = {
+      ...updatePostCommentInput,
+      userTag: userTagList,
+      userCommentId: userCommentId,
+      postId: oldComment.postId,
+    };
+
+    await this.postService.editCommentPost(commentId, updatePostCommentData);
+
+    if (file) {
+      await this.postService.editPostCommentImage(commentId, {
+        path: file.path,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
+    }
+
+    return await this.postService.getCommentById(commentId);
   }
 
   @Post('/:id/reply')

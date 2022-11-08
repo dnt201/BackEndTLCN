@@ -1,3 +1,4 @@
+import { UpdatePostCommentDTO } from './../dtos/updatePostComment.dto';
 import {
   forwardRef,
   Inject,
@@ -171,28 +172,52 @@ export class PostService {
 
     Promise.all(
       createData.userTag.map(async (userTag) => {
-        try {
-          const userOnTag = await this.userService.getUserById(userTag);
-          if (!userOnTag) {
-            throw new NotFoundException(
-              `Can not found user with id: ${userTag}`,
-            );
-          }
-
-          const postCommentTag =
-            await this.postCommentTagRepository.createCommentTag({
-              senderId: userTag,
-              commentId: postComment.commentId,
-            });
-
-          await this.postCommentTagRepository.save(postCommentTag);
-        } catch (error) {
-          throw new NotFoundException(error.message);
-        }
+        await this.addCommentTag(userTag, postComment.commentId);
       }),
     );
 
     return postComment;
+  }
+
+  async editCommentPost(
+    commentId: string,
+    updatePostCommentData: UpdatePostCommentDTO,
+  ) {
+    const userTagIds =
+      await this.postCommentTagRepository.getUserTagIdByCommentId(commentId);
+    const comment = await this.postCommentRepository.getCommentById(commentId);
+
+    const userDeleteInTag = userTagIds.filter(
+      (x) => !updatePostCommentData.userTag.includes(x.senderId),
+    );
+    const userAddNewInTag = updatePostCommentData.userTag.filter(
+      (x) => !userTagIds.map((data) => data.senderId).includes(x),
+    );
+
+    Promise.all(
+      userDeleteInTag.map(async (commentTag) => {
+        await this.removeCommentTag(commentTag.commentTagId);
+      }),
+    );
+
+    Promise.all(
+      userAddNewInTag.map(async (userTag) => {
+        await this.addCommentTag(userTag, commentId);
+      }),
+    );
+
+    const postComment = await this.postCommentRepository.updateComment(
+      commentId,
+      {
+        ...comment,
+        postId: updatePostCommentData.postId,
+        senderId: updatePostCommentData.userCommentId,
+        content: updatePostCommentData.commentContent,
+      },
+    );
+    await this.postCommentRepository.save(postComment);
+
+    return await this.getCommentById(commentId);
   }
 
   async getCommentById(commentId: string) {
@@ -397,10 +422,15 @@ export class PostService {
       const part = thumbnailLink.split('/');
       thumbnailLink = part[part.length - 1];
     }
-    const oldImage = await this.fileService.getFileById(thumbnailLink);
 
-    if (await CompareTwoImage(oldImage.path, fileData.path)) return;
-    else await this.addThumbnail(postId, fileData);
+    if (thumbnailLink) {
+      const oldImage = await this.fileService.getFileById(thumbnailLink);
+
+      if (await CompareTwoImage(oldImage.path, fileData.path)) return;
+      else await this.addThumbnail(postId, fileData);
+    } else {
+      await this.addThumbnail(postId, fileData);
+    }
   }
 
   async addPostCommentImage(commentId: string, fileData: FileDTO) {
@@ -419,16 +449,43 @@ export class PostService {
     return `http://localhost:3000/file/${replyImage.id}`;
   }
 
-  // async editPostCommentImage(commentId: string, fileData: FileDTO) {
-  //   const post = await this.getCommentById(commentId);
-  //   let thumbnailLink = post.thumbnailLink;
-  //   if (thumbnailLink) {
-  //     const part = thumbnailLink.split('/');
-  //     thumbnailLink = part[part.length - 1];
-  //   }
-  //   const oldImage = await this.fileService.getFileById(thumbnailLink);
+  async editPostCommentImage(commentId: string, fileData: FileDTO) {
+    const post = await this.getCommentById(commentId);
+    let imageLink = post.imageLink;
+    if (imageLink) {
+      const part = imageLink.split('/');
+      imageLink = part[part.length - 1];
+    }
 
-  //   if (await CompareTwoImage(oldImage.path, fileData.path)) return;
-  //   else await this.addThumbnail(postId, fileData);
-  // }
+    if (imageLink) {
+      const oldImage = await this.fileService.getFileById(imageLink);
+      if (await CompareTwoImage(oldImage.path, fileData.path)) return;
+      else await this.addPostCommentImage(commentId, fileData);
+    } else {
+      await this.addPostCommentImage(commentId, fileData);
+    }
+  }
+
+  private async addCommentTag(userTag: string, commentId: string) {
+    try {
+      const userOnTag = await this.userService.getUserById(userTag);
+      if (!userOnTag) {
+        throw new NotFoundException(`Can not found user with id: ${userTag}`);
+      }
+
+      const postCommentTag =
+        await this.postCommentTagRepository.createCommentTag({
+          senderId: userTag,
+          commentId: commentId,
+        });
+
+      await this.postCommentTagRepository.save(postCommentTag);
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  private async removeCommentTag(commentTagId: string) {
+    await this.postCommentTagRepository.removeCommentTag(commentTagId);
+  }
 }
