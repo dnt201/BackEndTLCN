@@ -1,3 +1,4 @@
+import { getUserWithImageLink } from 'src/utils/getImageLinkUrl';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
@@ -82,6 +83,14 @@ export class AuthService {
     return {
       cookie,
       token,
+    };
+  }
+
+  public async getMyInfo(userId: string) {
+    const user = await this.userService.getUserByIdWithMoreInfo(userId);
+    const myInfo = getUserWithImageLink(user);
+    return {
+      ...myInfo,
     };
   }
 
