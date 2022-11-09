@@ -14,6 +14,7 @@ import { User } from 'src/modules/users/entities/user.entity';
 import { PostReply } from './postReply.entity';
 import { PostCommentTag } from './postCommentTag.entity';
 import { File } from '../../files/entities/file.entity';
+import { PostCommentVote } from './postCommentVote.entity';
 
 @Entity('Post_Comment')
 export class PostComment implements IModified {
@@ -28,6 +29,9 @@ export class PostComment implements IModified {
 
   @Column()
   content: string;
+
+  @Column({ default: 0 })
+  vote: number;
 
   @Column({ nullable: true })
   public imageId?: string;
@@ -59,6 +63,12 @@ export class PostComment implements IModified {
   @JoinColumn({ name: 'imageId' })
   @OneToOne(() => File, { nullable: true })
   public image?: File;
+
+  @OneToMany(
+    () => PostCommentVote,
+    (postCommentVote: PostCommentVote) => postCommentVote.postComment,
+  )
+  public postCommentVotes: PostCommentVote[];
 
   countReply: number;
 }
