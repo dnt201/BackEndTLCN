@@ -174,7 +174,6 @@ export class UserRepository extends Repository<User> {
         };
       });
     } catch (error) {
-      console.log(error);
       throw new InternalServerErrorException(error.message);
     }
   }

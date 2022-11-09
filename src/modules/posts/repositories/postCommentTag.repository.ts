@@ -17,4 +17,21 @@ export class PostCommentTagRepository extends Repository<PostCommentTag> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async getUserTagIdByCommentId(commentId: string) {
+    try {
+      const commentTags = await this.find({ where: { commentId: commentId } });
+      return commentTags;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async removeCommentTag(commentTagId: string) {
+    try {
+      await this.delete(commentTagId);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }
