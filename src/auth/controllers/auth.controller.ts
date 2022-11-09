@@ -11,7 +11,6 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { getUserWithImageLink } from 'src/utils/getImageLinkUrl';
 
 import { RegisterDTO } from '../dtos/register.dto';
 import JwtAuthenticationGuard from '../guards/jwt-authentication.guard';
@@ -65,12 +64,17 @@ export class AuthController {
 
   @UseGuards(JwtRefreshGuard)
   @Get('refresh')
-  refresh(@Req() request: RequestWithUser) {
-    const accessTokenCookie = this.authService.getCookieWithJwtToken(
+  async refresh(@Req() request: RequestWithUser) {
+    const accessTokenCookie = await this.authService.getCookieWithJwtToken(
       request.user.id,
     );
+    const refreshTokenCookie =
+      await this.authService.getCookieWithJwtRefreshToken(request.user.id);
 
-    return accessTokenCookie;
+    return {
+      accessToken: accessTokenCookie,
+      refreshToken: refreshTokenCookie.token,
+    };
   }
 
   @Post('/activate/:token')
