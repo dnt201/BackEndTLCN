@@ -44,6 +44,10 @@ import {
   UpdatePostCommentDTO,
   UpdatePostCommentInput,
 } from '../dtos/updatePostComment.dto';
+import {
+  UpdatePostReplyDTO,
+  UpdatePostReplyInput,
+} from '../dtos/updatePostReply.dto';
 
 @Controller('post')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -315,9 +319,13 @@ export class PostController {
       throw new BadRequestException(`Not found comment with id ${commentId}`);
     }
 
+    const userTagList = createPostReplyInput.userTag
+      .split(',')
+      .filter((userTag) => userTag !== '');
+
     const createPostReplyData: CreatePostReplyDTO = {
       ...createPostReplyInput,
-      userTag: createPostReplyInput.userTag.split(','),
+      userTag: userTagList,
       userCommentId: userReplyId,
       commentId: commentId,
     };
@@ -333,6 +341,63 @@ export class PostController {
     }
 
     return await this.postService.getReplyById(postReply.replyId);
+  }
+
+  @Put('reply/edit/:id')
+  @UseGuards(JwtAuthenticationGuard)
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/post-reply',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
+  async editPostReply(
+    @Req() request: RequestWithUser,
+    @Param('id') replyId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() updatePostReplyInput: UpdatePostReplyInput,
+  ) {
+    const userReplyId = request.user.id;
+    const oldReply = await this.postService.getReplyById(replyId);
+
+    if (oldReply.senderId !== userReplyId) {
+      throw new BadRequestException(`You can not edit this comment`);
+    }
+
+    const userTagList = updatePostReplyInput.userTag
+      .split(',')
+      .filter((userTag) => userTag !== '');
+
+    const updatePostCommentData: UpdatePostReplyDTO = {
+      ...updatePostReplyInput,
+      userTag: userTagList,
+      userCommentId: userReplyId,
+      commentId: oldReply.commentId,
+    };
+
+    await this.postService.editReplyPost(replyId, updatePostCommentData);
+
+    if (file) {
+      await this.postService.editPostReplyImage(replyId, {
+        path: file.path,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
+    }
+
+    return await this.postService.getReplyById(replyId);
   }
 
   @Get('/all')

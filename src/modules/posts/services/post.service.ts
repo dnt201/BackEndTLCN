@@ -1,3 +1,4 @@
+import { UpdatePostReplyDTO } from './../dtos/updatePostReply.dto';
 import { UpdatePostCommentDTO } from './../dtos/updatePostComment.dto';
 import {
   forwardRef,
@@ -248,29 +249,48 @@ export class PostService {
 
     Promise.all(
       createData.userTag.map(async (userTag) => {
-        try {
-          const userOnTag = await this.userService.getUserById(userTag);
-          if (!userOnTag) {
-            throw new NotFoundException(
-              `Can not found user with id: ${userTag}`,
-            );
-          }
-
-          const postReplyTag = await this.postReplyTagRepository.createReplyTag(
-            {
-              senderId: userTag,
-              replyId: postReply.replyId,
-            },
-          );
-
-          await this.postReplyTagRepository.save(postReplyTag);
-        } catch (error) {
-          throw new NotFoundException(error.message);
-        }
+        await this.addReplyTag(userTag, postReply.replyId);
       }),
     );
 
     return postReply;
+  }
+
+  async editReplyPost(
+    replyId: string,
+    updatePostReplyData: UpdatePostReplyDTO,
+  ) {
+    const userTagIds = await this.postReplyTagRepository.getUserTagIdByReplyId(
+      replyId,
+    );
+    const reply = await this.postReplyRepository.getReplyById(replyId);
+
+    const userDeleteInTag = userTagIds.filter(
+      (x) => !updatePostReplyData.userTag.includes(x.senderId),
+    );
+    const userAddNewInTag = updatePostReplyData.userTag.filter(
+      (x) => !userTagIds.map((data) => data.senderId).includes(x),
+    );
+
+    Promise.all(
+      userDeleteInTag.map(async (replyTag) => {
+        await this.removeReplyTag(replyTag.replyTagId);
+      }),
+    );
+
+    Promise.all(
+      userAddNewInTag.map(async (userTag) => {
+        await this.addReplyTag(userTag, replyId);
+      }),
+    );
+
+    const postReply = await this.postReplyRepository.updateReply(replyId, {
+      ...reply,
+      commentId: updatePostReplyData.commentId,
+      senderId: updatePostReplyData.userCommentId,
+      content: updatePostReplyData.replyContent,
+    });
+    await this.postReplyRepository.save(postReply);
   }
 
   async getReplyById(replyId: string) {
@@ -443,6 +463,7 @@ export class PostService {
 
   async addPostReplyImage(replyId: string, fileData: FileDTO) {
     const replyImage = await this.fileService.saveLocalFileData(fileData);
+    console.log(replyImage);
     await this.postReplyRepository.update(replyId, {
       imageId: replyImage.id,
     });
@@ -463,6 +484,23 @@ export class PostService {
       else await this.addPostCommentImage(commentId, fileData);
     } else {
       await this.addPostCommentImage(commentId, fileData);
+    }
+  }
+
+  async editPostReplyImage(replyId: string, fileData: FileDTO) {
+    const post = await this.getReplyById(replyId);
+    let imageLink = post.imageLink;
+    if (imageLink) {
+      const part = imageLink.split('/');
+      imageLink = part[part.length - 1];
+    }
+
+    if (imageLink) {
+      const oldImage = await this.fileService.getFileById(imageLink);
+      if (await CompareTwoImage(oldImage.path, fileData.path)) return;
+      else await this.addPostCommentImage(replyId, fileData);
+    } else {
+      await this.addPostCommentImage(replyId, fileData);
     }
   }
 
@@ -487,5 +525,27 @@ export class PostService {
 
   private async removeCommentTag(commentTagId: string) {
     await this.postCommentTagRepository.removeCommentTag(commentTagId);
+  }
+
+  private async addReplyTag(userTag: string, replyId: string) {
+    try {
+      const userOnTag = await this.userService.getUserById(userTag);
+      if (!userOnTag) {
+        throw new NotFoundException(`Can not found user with id: ${userTag}`);
+      }
+
+      const postReplyTag = await this.postReplyTagRepository.createReplyTag({
+        senderId: userTag,
+        replyId: replyId,
+      });
+
+      await this.postReplyTagRepository.save(postReplyTag);
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  private async removeReplyTag(replyId: string) {
+    await this.postReplyTagRepository.removeReplyTag(replyId);
   }
 }

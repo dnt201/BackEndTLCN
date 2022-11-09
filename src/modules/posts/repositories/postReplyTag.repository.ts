@@ -17,4 +17,21 @@ export class PostReplyTagRepository extends Repository<PostReplyTag> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async getUserTagIdByReplyId(replyId: string) {
+    try {
+      const replyTags = await this.find({ where: { replyId: replyId } });
+      return replyTags;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async removeReplyTag(replyTagId: string) {
+    try {
+      await this.delete(replyTagId);
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }
