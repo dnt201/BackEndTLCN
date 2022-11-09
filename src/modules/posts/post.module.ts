@@ -1,3 +1,4 @@
+import { PostCommentVoteRepository } from './repositories/postCommentVote.repository';
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoryModule } from '../categories/category.module';
@@ -56,6 +57,7 @@ import { PostTagService } from './services/postTag.service';
     PostCommentRepository,
     PostReplyTagRepository,
     PostCommentTagRepository,
+    PostCommentVoteRepository,
     PostService,
   ],
   controllers: [PostTagController, PostController],

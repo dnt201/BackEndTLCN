@@ -32,6 +32,8 @@ import { CompareTwoImage } from 'src/utils/compareTwoImage';
 import { PostReplyTagRepository } from '../repositories/postReplyTag.repository';
 import { CreatePostReplyDTO } from '../dtos/createReply.dto';
 import { CommentPage } from '../dtos/commentPage.dto';
+import { VoteCommentPostDTO } from '../dtos/voteCommentPost.dto';
+import { PostCommentVoteRepository } from '../repositories/postCommentVote.repository';
 
 @Injectable()
 export class PostService {
@@ -44,6 +46,7 @@ export class PostService {
     private readonly postReplyRepository: PostReplyRepository,
     private readonly postReplyTagRepository: PostReplyTagRepository,
     private readonly folowPostRepository: FollowPostRepository,
+    private readonly postCommentVoteRepository: PostCommentVoteRepository,
     private readonly fileService: FileService,
 
     @Inject(forwardRef(() => UsersService))
@@ -224,6 +227,65 @@ export class PostService {
   async getCommentById(commentId: string) {
     const comment = await this.postCommentRepository.getCommentById(commentId);
     return comment ? getCommentWithImageLink(comment) : null;
+  }
+
+  async voteCommentPost(voteCommentPostData: VoteCommentPostDTO) {
+    const user = await this.userService.getUserById(voteCommentPostData.userId);
+    const comment = await this.getCommentById(
+      voteCommentPostData.postCommentId,
+    );
+    const upVote = voteCommentPostData.type === true ? 1 : -1;
+
+    if (!user) {
+      throw new NotFoundException(
+        `Can not found user with id: ${voteCommentPostData.userId}`,
+      );
+    } else if (!comment) {
+      throw new NotFoundException(
+        `Can not find post with id: ${voteCommentPostData.postCommentId}`,
+      );
+    }
+
+    const votePostComment =
+      await this.postCommentVoteRepository.getVotePostCommentById(
+        voteCommentPostData.userId,
+        voteCommentPostData.postCommentId,
+      );
+
+    if (!votePostComment) {
+      const votePost = await this.postCommentVoteRepository.votePost(
+        voteCommentPostData,
+      );
+      await this.postCommentVoteRepository.save(votePost);
+      await this.postCommentRepository.update(
+        voteCommentPostData.postCommentId,
+        {
+          vote: comment.vote + upVote,
+        },
+      );
+    } else if (votePostComment.type === votePostComment.type) {
+      await this.postCommentVoteRepository.deleteVote(
+        voteCommentPostData.userId,
+        voteCommentPostData.postCommentId,
+      );
+
+      await this.postCommentRepository.update(
+        voteCommentPostData.postCommentId,
+        {
+          vote: comment.vote - upVote,
+        },
+      );
+    } else {
+      await this.postCommentVoteRepository.updateVotePost(voteCommentPostData);
+      await this.postCommentRepository.update(
+        voteCommentPostData.postCommentId,
+        {
+          vote: comment.vote + 2 * upVote,
+        },
+      );
+    }
+
+    return true;
   }
 
   async replyPost(createData: CreatePostReplyDTO) {

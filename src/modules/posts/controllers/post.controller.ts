@@ -286,6 +286,31 @@ export class PostController {
     return await this.postService.getCommentById(commentId);
   }
 
+  @Post('comment/:id/vote')
+  @UseGuards(JwtAuthenticationGuard)
+  async votePostComment(
+    @Req() request: RequestWithUser,
+    @Param('id') postCommentId: string,
+    @Body() body,
+  ) {
+    const postComment = await this.postService.getCommentById(postCommentId);
+    if (!postComment) {
+      throw new BadRequestException(
+        `Not found comment with id ${postCommentId}`,
+      );
+    }
+    if (postComment.senderId === request.user.id) {
+      throw new BadRequestException(`You can not vote your comment!`);
+    }
+
+    const vote = await this.postService.voteCommentPost({
+      userId: request.user.id,
+      postCommentId: postCommentId,
+      type: body.type === 'Upvote' ? true : false,
+    });
+    return vote;
+  }
+
   @Post('/:id/reply')
   @UseGuards(JwtAuthenticationGuard)
   @UseInterceptors(
