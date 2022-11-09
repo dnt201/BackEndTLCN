@@ -46,11 +46,9 @@ export class AuthController {
     const refreshTokenCookie =
       await this.authService.getCookieWithJwtRefreshToken(user.id);
 
-    request.res.setHeader('Set-Cookie', refreshTokenCookie.cookie);
-
     return {
       accessToken: accessTokenCookie,
-      refreshToken: refreshTokenCookie.token,
+      refreshToken: refreshTokenCookie,
     };
   }
 
@@ -73,7 +71,7 @@ export class AuthController {
 
     return {
       accessToken: accessTokenCookie,
-      refreshToken: refreshTokenCookie.token,
+      refreshToken: refreshTokenCookie,
     };
   }
 

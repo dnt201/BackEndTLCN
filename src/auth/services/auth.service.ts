@@ -77,13 +77,10 @@ export class AuthService {
 
     await this.userService.setCurrentRefreshToken(token, userId);
 
-    const cookie = `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get(
-      'JWT_REFRESH_EXPIRATION_TIME',
-    )}s`;
-    return {
-      cookie,
-      token,
-    };
+    // const cookie = `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get(
+    //   'JWT_REFRESH_EXPIRATION_TIME',
+    // )}s`;
+    return token;
   }
 
   public async getMyInfo(userId: string) {
