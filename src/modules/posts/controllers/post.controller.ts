@@ -40,6 +40,14 @@ import {
   CreatePostReplyInput,
 } from '../dtos/createReply.dto';
 import { CommentPage } from '../dtos/commentPage.dto';
+import {
+  UpdatePostCommentDTO,
+  UpdatePostCommentInput,
+} from '../dtos/updatePostComment.dto';
+import {
+  UpdatePostReplyDTO,
+  UpdatePostReplyInput,
+} from '../dtos/updatePostReply.dto';
 
 @Controller('post')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -195,10 +203,13 @@ export class PostController {
     if ((await this.isExistPost(postId)) === false) {
       throw new BadRequestException(`Not found post with id ${postId}`);
     }
+    const userTagList = createPostCommentInput.userTag
+      .split(',')
+      .filter((userTag) => userTag !== '');
 
     const createPostCommentData: CreatePostCommentDTO = {
       ...createPostCommentInput,
-      userTag: createPostCommentInput.userTag.split(','),
+      userTag: userTagList,
       userCommentId: userCommentId,
       postId: postId,
     };
@@ -216,6 +227,63 @@ export class PostController {
     }
 
     return await this.postService.getCommentById(postComment.commentId);
+  }
+
+  @Put('comment/edit/:id')
+  @UseGuards(JwtAuthenticationGuard)
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/post-comment',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
+  async editPostComment(
+    @Req() request: RequestWithUser,
+    @Param('id') commentId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() updatePostCommentInput: UpdatePostCommentInput,
+  ) {
+    const userCommentId = request.user.id;
+    const oldComment = await this.postService.getCommentById(commentId);
+
+    if (oldComment.senderId !== userCommentId) {
+      throw new BadRequestException(`You can not edit this comment`);
+    }
+
+    const userTagList = updatePostCommentInput.userTag
+      .split(',')
+      .filter((userTag) => userTag !== '');
+
+    const updatePostCommentData: UpdatePostCommentDTO = {
+      ...updatePostCommentInput,
+      userTag: userTagList,
+      userCommentId: userCommentId,
+      postId: oldComment.postId,
+    };
+
+    await this.postService.editCommentPost(commentId, updatePostCommentData);
+
+    if (file) {
+      await this.postService.editPostCommentImage(commentId, {
+        path: file.path,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
+    }
+
+    return await this.postService.getCommentById(commentId);
   }
 
   @Post('/:id/reply')
@@ -251,9 +319,13 @@ export class PostController {
       throw new BadRequestException(`Not found comment with id ${commentId}`);
     }
 
+    const userTagList = createPostReplyInput.userTag
+      .split(',')
+      .filter((userTag) => userTag !== '');
+
     const createPostReplyData: CreatePostReplyDTO = {
       ...createPostReplyInput,
-      userTag: createPostReplyInput.userTag.split(','),
+      userTag: userTagList,
       userCommentId: userReplyId,
       commentId: commentId,
     };
@@ -269,6 +341,63 @@ export class PostController {
     }
 
     return await this.postService.getReplyById(postReply.replyId);
+  }
+
+  @Put('reply/edit/:id')
+  @UseGuards(JwtAuthenticationGuard)
+  @UseInterceptors(
+    FilesInterceptor({
+      fieldName: 'file',
+      path: '/post-reply',
+      fileFilter: (request, file, callback) => {
+        if (!file.mimetype.includes('image')) {
+          return callback(
+            new PayloadTooLargeException('Provide a valid image'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: Math.pow(1024, 2), // 1MB
+      },
+    }),
+  )
+  async editPostReply(
+    @Req() request: RequestWithUser,
+    @Param('id') replyId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() updatePostReplyInput: UpdatePostReplyInput,
+  ) {
+    const userReplyId = request.user.id;
+    const oldReply = await this.postService.getReplyById(replyId);
+
+    if (oldReply.senderId !== userReplyId) {
+      throw new BadRequestException(`You can not edit this comment`);
+    }
+
+    const userTagList = updatePostReplyInput.userTag
+      .split(',')
+      .filter((userTag) => userTag !== '');
+
+    const updatePostCommentData: UpdatePostReplyDTO = {
+      ...updatePostReplyInput,
+      userTag: userTagList,
+      userCommentId: userReplyId,
+      commentId: oldReply.commentId,
+    };
+
+    await this.postService.editReplyPost(replyId, updatePostCommentData);
+
+    if (file) {
+      await this.postService.editPostReplyImage(replyId, {
+        path: file.path,
+        filename: file.originalname,
+        mimetype: file.mimetype,
+      });
+    }
+
+    return await this.postService.getReplyById(replyId);
   }
 
   @Get('/all')
