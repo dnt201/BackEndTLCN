@@ -525,7 +525,6 @@ export class PostService {
 
   async addPostReplyImage(replyId: string, fileData: FileDTO) {
     const replyImage = await this.fileService.saveLocalFileData(fileData);
-    console.log(replyImage);
     await this.postReplyRepository.update(replyId, {
       imageId: replyImage.id,
     });

@@ -28,5 +28,6 @@ import { JwtRefreshTokenStrategy } from './guards/jwt-refresh-token.strategy';
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy, JwtRefreshTokenStrategy],
   controllers: [AuthController],
+  exports: [AuthService],
 })
 export class AuthModule {}
