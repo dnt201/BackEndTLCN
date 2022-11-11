@@ -1,5 +1,5 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 import { UsersModule } from 'src/modules/users/users.module';
 import { AuthService } from './services/auth.service';
@@ -12,9 +12,9 @@ import { JwtRefreshTokenStrategy } from './guards/jwt-refresh-token.strategy';
 
 @Module({
   imports: [
-    UsersModule,
     ConfigModule,
     PassportModule,
+    forwardRef(() => UsersModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

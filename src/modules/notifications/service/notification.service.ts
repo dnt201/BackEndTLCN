@@ -1,11 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { WsException } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/services/auth.service';
+import { SocketConnectionService } from 'src/modules/connection/services/socketConnection.service';
 
 @Injectable()
+@WebSocketGateway()
 export class NotificationService {
-  constructor(private readonly authService: AuthService) {}
+  @WebSocketServer()
+  server: Server;
+
+  constructor(
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
+    private readonly connectStore: SocketConnectionService,
+  ) {}
 
   async getUserFromSocket(socket: Socket) {
     try {
@@ -16,10 +25,20 @@ export class NotificationService {
 
       if (!user) {
         socket.disconnect();
-        throw new Error('Invalid credentials.');
+        throw new Error('Invalid credentials');
       } else return user;
     } catch (error) {
-      throw new WsException(error.message);
+      return error.message;
+    }
+  }
+
+  async sendNotification(notificationType: string, userId: string) {
+    const socketToken = await this.connectStore.getConnection(userId);
+
+    if (socketToken) {
+      this.server.sockets
+        .to(socketToken)
+        .emit(notificationType, `Recieved Notification`);
     }
   }
 }

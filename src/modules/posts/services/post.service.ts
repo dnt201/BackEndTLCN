@@ -34,6 +34,7 @@ import { CreatePostReplyDTO } from '../dtos/createReply.dto';
 import { CommentPage } from '../dtos/commentPage.dto';
 import { VoteCommentPostDTO } from '../dtos/voteCommentPost.dto';
 import { PostCommentVoteRepository } from '../repositories/postCommentVote.repository';
+import { NotificationService } from 'src/modules/notifications/service/notification.service';
 
 @Injectable()
 export class PostService {
@@ -48,9 +49,10 @@ export class PostService {
     private readonly folowPostRepository: FollowPostRepository,
     private readonly postCommentVoteRepository: PostCommentVoteRepository,
     private readonly fileService: FileService,
-
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
+    /*======================================================*/
+    private readonly notificationService: NotificationService,
   ) {}
 
   async createPost(createPostData: CreatePostDTO, ownerId: string) {
@@ -111,6 +113,7 @@ export class PostService {
   }
 
   async votePost(votePostData: VotePostDTO) {
+    let sendNotification = false;
     const user = await this.userService.getUserById(votePostData.userId);
     const post = await this.getPostById(votePostData.postId);
     const upVote = votePostData.type === true ? 1 : -1;
@@ -135,6 +138,7 @@ export class PostService {
       await this.postRepository.update(votePostData.postId, {
         vote: post.vote + upVote,
       });
+      sendNotification = true;
     } else if (votePost.type === votePostData.type) {
       await this.postVoteRepository.deleteVote(
         votePostData.userId,
@@ -149,8 +153,12 @@ export class PostService {
       await this.postRepository.update(votePostData.postId, {
         vote: post.vote + 2 * upVote,
       });
+      sendNotification = true;
     }
 
+    if (sendNotification) {
+      this.notificationService.sendNotification('Vote Post', post.owner.id);
+    }
     return true;
   }
 

@@ -1,7 +1,13 @@
 import { getUserWithImageLink } from 'src/utils/getImageLinkUrl';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import { RegisterDTO } from '../dtos/register.dto';
 import { UsersService } from 'src/modules/users/services/users.service';
@@ -13,8 +19,10 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly jwtService: JwtService,
-    private readonly userService: UsersService,
     private readonly configService: ConfigService,
+
+    @Inject(forwardRef(() => UsersService))
+    private readonly userService: UsersService,
   ) {}
 
   async register(registrationData: RegisterDTO) {

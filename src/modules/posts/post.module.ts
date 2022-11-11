@@ -1,3 +1,5 @@
+import { AuthModule } from 'src/auth/auth.module';
+import { NotificationModule } from './../notifications/notification.module';
 import { PostCommentVoteRepository } from './repositories/postCommentVote.repository';
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -41,8 +43,10 @@ import { PostTagService } from './services/postTag.service';
       PostCommentTag,
       UserFollowPost,
     ]),
+    forwardRef(() => AuthModule),
     forwardRef(() => UsersModule),
     forwardRef(() => SettingModule),
+    forwardRef(() => NotificationModule),
     FileModule,
     CategoryModule,
   ],
