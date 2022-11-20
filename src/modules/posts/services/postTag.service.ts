@@ -72,8 +72,8 @@ export class PostTagService {
     return getPostTagWithThumbnailLink(data);
   }
 
-  async getAllPostTags(page: PostTagPage) {
-    return await this.postTagRepository.getAllPostTags(page);
+  async getAllPostTags(page: PostTagPage, dataSearch: string) {
+    return await this.postTagRepository.getAllPostTags(page, dataSearch);
   }
 
   async addThumbnail(postTagId: string, fileData: FileDTO) {

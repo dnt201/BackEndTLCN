@@ -7,7 +7,7 @@ import {
 import { Page } from 'src/common/dto/Page';
 import { PagedData } from 'src/common/dto/PageData';
 import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, ILike, Repository } from 'typeorm';
 import { CreatePostTagDTO } from '../dtos/createPostTag.dto';
 import { PostTagPage } from '../dtos/posttagPage.dto';
 import { UpdatePostTagDTO } from '../dtos/updatePostTag.dto';
@@ -66,7 +66,7 @@ export class PostTagRepository extends Repository<PostTag> {
     }
   }
 
-  async getAllPostTags(page: PostTagPage) {
+  async getAllPostTags(page: PostTagPage, dataSearch: string) {
     const orderQuery =
       page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);
 
@@ -77,11 +77,18 @@ export class PostTagRepository extends Repository<PostTag> {
 
     try {
       const listPostTag = await this.find({
+        where: {
+          displayName: ILike(`%${dataSearch}%`),
+        },
         order: orderQuery,
         take: takeQuery,
         skip: (skipQuery - 1) * takeQuery,
       });
-      const totalPostTag = await this.count();
+      const totalPostTag = await this.count({
+        where: {
+          displayName: ILike(`%${dataSearch}%`),
+        },
+      });
 
       dataReturn.data = listPostTag;
       dataReturn.page = new Page(
