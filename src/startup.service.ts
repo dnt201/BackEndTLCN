@@ -189,6 +189,16 @@ export class AppService implements OnModuleInit {
         key: 'UPLOADED_FILE_DESTINATION',
         value: './upload',
       },
+      {
+        group: 'NOTIFICATION',
+        key: 'TIME_OUT',
+        value: '5000',
+      },
+      {
+        group: 'NOTIFICATION',
+        key: 'MAX_ATTEMPTS',
+        value: '3',
+      },
     ];
 
     await Promise.all(

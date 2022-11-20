@@ -20,10 +20,13 @@ export class SocketConnectionService {
     const socketToken = await this.socketConnectionRepository.getConnection(
       userId,
     );
-    return socketToken.socketToken;
+    return socketToken?.socketToken;
   }
 
   async disconnect(userId: string) {
-    return await this.socketConnectionRepository.disconnectSocketIO(userId);
+    const connection = await this.getConnection(userId);
+    if (connection) {
+      return await this.socketConnectionRepository.disconnectSocketIO(userId);
+    }
   }
 }
