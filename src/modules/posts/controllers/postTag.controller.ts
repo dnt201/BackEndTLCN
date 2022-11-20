@@ -9,6 +9,7 @@ import {
   PayloadTooLargeException,
   Post,
   Put,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -31,11 +32,16 @@ export class PostTagController {
   constructor(private readonly postTagService: PostTagService) {}
 
   @Get()
-  async getAllPostTag(@Body() page: PostTagPage) {
+  async getAllPostTag(@Body() page: PostTagPage, @Query() searchData) {
     const dataReturn: ReturnResult<PagedData<PostTag>> = new ReturnResult<
       PagedData<PostTag>
     >();
-    const value = await this.postTagService.getAllPostTags(page);
+
+    let dataSearch = '';
+    if (searchData?.name == null) dataSearch = '';
+    else dataSearch = searchData.name;
+
+    const value = await this.postTagService.getAllPostTags(page, dataSearch);
     dataReturn.result = value;
     dataReturn.message = null;
 
