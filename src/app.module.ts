@@ -10,6 +10,7 @@ import { PostModule } from './modules/posts/post.module';
 import { SettingModule } from './modules/settings/setting.module';
 import { FileModule } from './modules/files/file.module';
 import { CategoryModule } from './modules/categories/category.module';
+import { NotificationModule } from './modules/notifications/notification.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { CategoryModule } from './modules/categories/category.module';
     SettingModule,
     FileModule,
     CategoryModule,
+    NotificationModule,
   ],
   controllers: [],
   providers: [AppService],

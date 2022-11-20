@@ -44,7 +44,15 @@ export class SettingService {
   }
 
   async getSettingByKeyAndGroup(key: string, group: string) {
-    return this.settingRepository.getSettingByKeyAndGroup(key, group);
+    return await this.settingRepository.getSettingByKeyAndGroup(key, group);
+  }
+
+  async getSettingValueByKeyAndGroup(key: string, group: string) {
+    const setting = await this.settingRepository.getSettingByKeyAndGroup(
+      key,
+      group,
+    );
+    return setting?.value;
   }
 
   async getAllSetting() {

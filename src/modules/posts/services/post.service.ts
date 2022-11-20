@@ -1,3 +1,4 @@
+import { NoticationType } from './../../../common/constants/notificationType.constant';
 import { UpdatePostReplyDTO } from './../dtos/updatePostReply.dto';
 import { UpdatePostCommentDTO } from './../dtos/updatePostComment.dto';
 import {
@@ -34,6 +35,9 @@ import { CreatePostReplyDTO } from '../dtos/createReply.dto';
 import { CommentPage } from '../dtos/commentPage.dto';
 import { VoteCommentPostDTO } from '../dtos/voteCommentPost.dto';
 import { PostCommentVoteRepository } from '../repositories/postCommentVote.repository';
+import { NotificationService } from 'src/modules/notifications/service/notification.service';
+import { NotificationStatus } from 'src/common/constants/notificationStatus.dto';
+import { NotificationReference } from 'src/common/constants/notificationRef.constant';
 
 @Injectable()
 export class PostService {
@@ -48,9 +52,10 @@ export class PostService {
     private readonly folowPostRepository: FollowPostRepository,
     private readonly postCommentVoteRepository: PostCommentVoteRepository,
     private readonly fileService: FileService,
-
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
+    /*======================================================*/
+    private readonly notificationService: NotificationService,
   ) {}
 
   async createPost(createPostData: CreatePostDTO, ownerId: string) {
@@ -111,6 +116,7 @@ export class PostService {
   }
 
   async votePost(votePostData: VotePostDTO) {
+    let sendNotification = false;
     const user = await this.userService.getUserById(votePostData.userId);
     const post = await this.getPostById(votePostData.postId);
     const upVote = votePostData.type === true ? 1 : -1;
@@ -135,6 +141,7 @@ export class PostService {
       await this.postRepository.update(votePostData.postId, {
         vote: post.vote + upVote,
       });
+      sendNotification = true;
     } else if (votePost.type === votePostData.type) {
       await this.postVoteRepository.deleteVote(
         votePostData.userId,
@@ -149,8 +156,28 @@ export class PostService {
       await this.postRepository.update(votePostData.postId, {
         vote: post.vote + 2 * upVote,
       });
+      sendNotification = true;
     }
 
+    if (sendNotification) {
+      await this.notificationService.createNotification({
+        body: `${user.username} voted to yout post`,
+        type: NoticationType.PostVote,
+        refType: NotificationReference.Post,
+        refId: votePostData.postId,
+        userId: post.owner.id,
+        status: NotificationStatus.Sent,
+      });
+    } else {
+      await this.notificationService.removeNotification({
+        body: `${user.username} voted to yout post`,
+        type: NoticationType.PostVote,
+        refType: NotificationReference.Post,
+        refId: votePostData.postId,
+        userId: post.owner.id,
+        status: NotificationStatus.Sent,
+      });
+    }
     return true;
   }
 
@@ -177,8 +204,29 @@ export class PostService {
     Promise.all(
       createData.userTag.map(async (userTag) => {
         await this.addCommentTag(userTag, postComment.commentId);
+
+        await this.notificationService.createNotification({
+          body: `${user.username} metioned you in a comment`,
+          type: NoticationType.PostComment,
+          refType: NotificationReference.Comment,
+          refId: postComment.commentId,
+          userId: userTag,
+          status: NotificationStatus.Sent,
+          extendData: JSON.stringify({
+            post: createData.postId,
+          }),
+        });
       }),
     );
+
+    await this.notificationService.createNotification({
+      body: `${user.username} comment in your post`,
+      type: NoticationType.PostComment,
+      refType: NotificationReference.Post,
+      refId: postComment.postId,
+      userId: post.owner.id,
+      status: NotificationStatus.Sent,
+    });
 
     return postComment;
   }
@@ -190,6 +238,9 @@ export class PostService {
     const userTagIds =
       await this.postCommentTagRepository.getUserTagIdByCommentId(commentId);
     const comment = await this.postCommentRepository.getCommentById(commentId);
+    const user = await this.userService.getUserById(
+      updatePostCommentData.userCommentId,
+    );
 
     const userDeleteInTag = userTagIds.filter(
       (x) => !updatePostCommentData.userTag.includes(x.senderId),
@@ -201,12 +252,37 @@ export class PostService {
     Promise.all(
       userDeleteInTag.map(async (commentTag) => {
         await this.removeCommentTag(commentTag.commentTagId);
+
+        // Remove Notification
+        await this.notificationService.removeNotification({
+          body: `${user.username} metioned you in a comment`,
+          type: NoticationType.PostComment,
+          refType: NotificationReference.Comment,
+          refId: postComment.commentId,
+          userId: commentTag.commentTagId,
+          status: NotificationStatus.Sent,
+          extendData: JSON.stringify({
+            post: updatePostCommentData.postId,
+          }),
+        });
       }),
     );
 
     Promise.all(
       userAddNewInTag.map(async (userTag) => {
         await this.addCommentTag(userTag, commentId);
+
+        await this.notificationService.createNotification({
+          body: `${user.username} metioned you in a comment`,
+          type: NoticationType.PostComment,
+          refType: NotificationReference.Comment,
+          refId: postComment.commentId,
+          userId: userTag,
+          status: NotificationStatus.Sent,
+          extendData: JSON.stringify({
+            post: updatePostCommentData.postId,
+          }),
+        });
       }),
     );
 
@@ -230,6 +306,7 @@ export class PostService {
   }
 
   async voteCommentPost(voteCommentPostData: VoteCommentPostDTO) {
+    let sendNotification = false;
     const user = await this.userService.getUserById(voteCommentPostData.userId);
     const comment = await this.getCommentById(
       voteCommentPostData.postCommentId,
@@ -263,6 +340,8 @@ export class PostService {
           vote: comment.vote + upVote,
         },
       );
+
+      sendNotification = true;
     } else if (votePostComment.type === votePostComment.type) {
       await this.postCommentVoteRepository.deleteVote(
         voteCommentPostData.userId,
@@ -283,8 +362,28 @@ export class PostService {
           vote: comment.vote + 2 * upVote,
         },
       );
+      sendNotification = true;
     }
 
+    if (sendNotification) {
+      await this.notificationService.createNotification({
+        body: `${user.username} voted to yout comment`,
+        type: NoticationType.PostCommentVote,
+        refType: NotificationReference.Comment,
+        refId: voteCommentPostData.postCommentId,
+        userId: voteCommentPostData.userId,
+        status: NotificationStatus.Sent,
+      });
+    } else {
+      await this.notificationService.removeNotification({
+        body: `${user.username} voted to yout comment`,
+        type: NoticationType.PostCommentVote,
+        refType: NotificationReference.Comment,
+        refId: voteCommentPostData.postCommentId,
+        userId: voteCommentPostData.userId,
+        status: NotificationStatus.Sent,
+      });
+    }
     return true;
   }
 
@@ -312,9 +411,34 @@ export class PostService {
     Promise.all(
       createData.userTag.map(async (userTag) => {
         await this.addReplyTag(userTag, postReply.replyId);
+
+        await this.notificationService.createNotification({
+          body: `${user.username} metioned you in a comment`,
+          type: NoticationType.PostReply,
+          refType: NotificationReference.Reply,
+          refId: postReply.replyId,
+          userId: userTag,
+          status: NotificationStatus.Sent,
+          extendData: JSON.stringify({
+            post: comment.postId,
+            comment: postReply.commentId,
+          }),
+        });
       }),
     );
 
+    await this.notificationService.createNotification({
+      body: `${user.username} reply you in a comment`,
+      type: NoticationType.PostReply,
+      refType: NotificationReference.Reply,
+      refId: postReply.replyId,
+      userId: createData.userCommentId,
+      status: NotificationStatus.Sent,
+      extendData: JSON.stringify({
+        post: comment.postId,
+        comment: postReply.commentId,
+      }),
+    });
     return postReply;
   }
 
@@ -322,6 +446,10 @@ export class PostService {
     replyId: string,
     updatePostReplyData: UpdatePostReplyDTO,
   ) {
+    const user = await this.userService.getUserById(
+      updatePostReplyData.userCommentId,
+    );
+    const comment = await this.getCommentById(updatePostReplyData.commentId);
     const userTagIds = await this.postReplyTagRepository.getUserTagIdByReplyId(
       replyId,
     );
@@ -337,12 +465,27 @@ export class PostService {
     Promise.all(
       userDeleteInTag.map(async (replyTag) => {
         await this.removeReplyTag(replyTag.replyTagId);
+
+        // Remove Notification
       }),
     );
 
     Promise.all(
       userAddNewInTag.map(async (userTag) => {
         await this.addReplyTag(userTag, replyId);
+
+        await this.notificationService.createNotification({
+          body: `${user.username} metioned you in a comment`,
+          type: NoticationType.PostReply,
+          refType: NotificationReference.Reply,
+          refId: postReply.replyId,
+          userId: userTag,
+          status: NotificationStatus.Sent,
+          extendData: JSON.stringify({
+            post: comment.postId,
+            comment: postReply.commentId,
+          }),
+        });
       }),
     );
 
@@ -525,7 +668,6 @@ export class PostService {
 
   async addPostReplyImage(replyId: string, fileData: FileDTO) {
     const replyImage = await this.fileService.saveLocalFileData(fileData);
-    console.log(replyImage);
     await this.postReplyRepository.update(replyId, {
       imageId: replyImage.id,
     });

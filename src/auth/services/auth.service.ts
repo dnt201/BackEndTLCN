@@ -1,19 +1,28 @@
 import { getUserWithImageLink } from 'src/utils/getImageLinkUrl';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 
 import { RegisterDTO } from '../dtos/register.dto';
 import { UsersService } from 'src/modules/users/services/users.service';
 import { JwtService } from '@nestjs/jwt';
+import TokenPayload from '../interfaces/tokenPayload.interface';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly jwtService: JwtService,
-    private readonly userService: UsersService,
     private readonly configService: ConfigService,
+
+    @Inject(forwardRef(() => UsersService))
+    private readonly userService: UsersService,
   ) {}
 
   async register(registrationData: RegisterDTO) {
@@ -93,6 +102,20 @@ export class AuthService {
 
   public getCookiesForLogOut() {
     return 'Refresh=; Value =; HttpOnly; Path=/; Max-Age=0';
+  }
+
+  public getUserFromAuthToken(token: string) {
+    try {
+      const payload: TokenPayload = this.jwtService.verify(token, {
+        secret: this.configService.get('JWT_ACCESS_TOKEN_SECRET'),
+      });
+
+      if (payload.id) {
+        return this.getUserData(payload.id);
+      }
+    } catch (error) {
+      return null;
+    }
   }
 
   async activateAccount(token: string) {

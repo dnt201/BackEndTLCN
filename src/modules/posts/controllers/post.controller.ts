@@ -258,7 +258,7 @@ export class PostController {
     const userCommentId = request.user.id;
     const oldComment = await this.postService.getCommentById(commentId);
 
-    if (oldComment.senderId !== userCommentId) {
+    if (oldComment?.senderId !== userCommentId) {
       throw new BadRequestException(`You can not edit this comment`);
     }
 
