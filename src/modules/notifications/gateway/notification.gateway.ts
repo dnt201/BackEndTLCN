@@ -55,4 +55,9 @@ export class NotificationGateway
   async receiveNotification(@MessageBody() notificationId: string) {
     this.notificationService.receiveNotification(notificationId);
   }
+
+  @SubscribeMessage('clickNotification')
+  async clickNotification(@MessageBody() notificationId: string) {
+    this.notificationService.clickNotification(notificationId);
+  }
 }

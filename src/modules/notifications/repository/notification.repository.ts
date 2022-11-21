@@ -90,4 +90,14 @@ export class NotificationRepository extends Repository<Notification> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async clickNotification(notificationId: string) {
+    try {
+      await this.update(notificationId, {
+        isClicked: true,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }

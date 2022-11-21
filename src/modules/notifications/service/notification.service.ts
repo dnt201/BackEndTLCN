@@ -113,4 +113,18 @@ export class NotificationService {
 
     await this.notificationRepository.receiveNotification(notificationId);
   }
+
+  async clickNotification(notificationId: string) {
+    const notification = await this.notificationRepository.findNotificationById(
+      notificationId,
+    );
+
+    if (!notification) {
+      throw new NotFoundException(
+        `Not found notification with id: ${notificationId}`,
+      );
+    }
+
+    await this.notificationRepository.clickNotification(notificationId);
+  }
 }
