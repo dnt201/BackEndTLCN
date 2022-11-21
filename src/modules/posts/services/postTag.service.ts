@@ -72,6 +72,10 @@ export class PostTagService {
     return getPostTagWithThumbnailLink(data);
   }
 
+  async getTopPostTag() {
+    return await this.postTagRepository.getTopPostTag();
+  }
+
   async getAllPostTags(page: PostTagPage, dataSearch: string) {
     return await this.postTagRepository.getAllPostTags(page, dataSearch);
   }

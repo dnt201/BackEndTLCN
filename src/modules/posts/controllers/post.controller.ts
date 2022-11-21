@@ -11,6 +11,7 @@ import {
   Controller,
   Get,
   Headers,
+  NotFoundException,
   Param,
   PayloadTooLargeException,
   Post,
@@ -131,6 +132,10 @@ export class PostController {
     @Body() createPostInput: CreatePostInput,
   ) {
     const post = await this.postService.getPostById(postId);
+    console.log(post);
+    if (!post?.id) {
+      throw new NotFoundException(`Not found post with id: ${postId}`);
+    }
     if (post.owner.id !== request.user.id) {
       throw new BadRequestException(`You can not edit this post`);
     }
