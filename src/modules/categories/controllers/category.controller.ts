@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -43,5 +44,13 @@ export class CategoryController {
   @Get('top')
   async getCategoryTop() {
     return await this.categoryService.getCategoryTop();
+  }
+
+  @Get('find')
+  async findCategory(@Query() searchData) {
+    let dataSearch = '';
+    if (searchData['name'] && searchData['name'].length > 0)
+      dataSearch = searchData['name'];
+    return await this.categoryService.findCategory(dataSearch);
   }
 }

@@ -1,5 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { DataSource, TreeRepository } from 'typeorm';
+import { Page } from 'src/common/dto/Page';
+import { PagedData } from 'src/common/dto/PageData';
+import { DataSource, ILike, TreeRepository } from 'typeorm';
 import { CreateCategoryDTO } from '../dtos/createCategory.dto';
 import { UpdateCategoryDTO } from '../dtos/updateCategory.dto';
 import { Category } from '../entities/category.entity';
@@ -96,6 +98,30 @@ export class CategoryRepository extends TreeRepository<Category> {
       return postCount;
     } catch (error) {
       console.log(error);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async findCategory(dataSearch: string) {
+    const dataReturn: PagedData<Category> = new PagedData<Category>();
+
+    try {
+      const listCategory = await this.find({
+        where: {
+          categoryName: ILike(`%${dataSearch}%`),
+        },
+        take: 5,
+      });
+      const totalCategory = await this.count({
+        where: {
+          categoryName: ILike(`%${dataSearch}%`),
+        },
+      });
+
+      dataReturn.data = listCategory;
+      dataReturn.page = new Page(5, 0, totalCategory, []);
+      return dataReturn;
+    } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
