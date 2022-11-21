@@ -16,6 +16,7 @@ import {
   PayloadTooLargeException,
   Post,
   Put,
+  Query,
   Req,
   UnauthorizedException,
   UploadedFile,
@@ -431,15 +432,23 @@ export class PostController {
   }
 
   @Get('/all')
-  async getAllPost(@Headers() headers, @Body() page: PostPage) {
+  async getAllPost(
+    @Headers() headers,
+    @Body() page: PostPage,
+    @Query() searchData,
+  ) {
     const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
       new ReturnResult<PagedData<PostWithMoreInfo>>();
     const data = getTypeHeader(headers);
 
+    let dataSearch = '';
+    if (searchData['name'] && searchData['name'].length > 0)
+      dataSearch = searchData['name'];
+
     if (data.message === HeaderNotification.WRONG_AUTHORIZATION) {
       throw new UnauthorizedException();
     } else {
-      const listPost = await this.postService.getAllPost(page);
+      const listPost = await this.postService.getAllPost(page, dataSearch);
 
       if (data.message === HeaderNotification.TRUE_AUTHORIZATION) {
         const userId = data.result;
