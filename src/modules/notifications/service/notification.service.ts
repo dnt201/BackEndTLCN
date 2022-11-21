@@ -1,4 +1,9 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/services/auth.service';
@@ -93,5 +98,19 @@ export class NotificationService {
     );
     if (notification)
       await this.notificationRepository.removeNotification(notificationDTO);
+  }
+
+  async receiveNotification(notificationId: string) {
+    const notification = await this.notificationRepository.findNotificationById(
+      notificationId,
+    );
+
+    if (!notification) {
+      throw new NotFoundException(
+        `Not found notification with id: ${notificationId}`,
+      );
+    }
+
+    await this.notificationRepository.receiveNotification(notificationId);
   }
 }

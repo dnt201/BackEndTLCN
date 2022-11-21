@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { NotificationStatus } from 'src/common/constants/notificationStatus.dto';
 import { Page } from 'src/common/dto/Page';
 import { PagedData } from 'src/common/dto/PageData';
-import { ReturnResult } from 'src/common/dto/ReturnResult';
 import { DataSource, Repository } from 'typeorm';
 import { NotificationDTO } from '../dto/notification.dto';
 import { NotificationPage } from '../dto/notificationPage.dto';
@@ -61,6 +61,14 @@ export class NotificationRepository extends Repository<Notification> {
     }
   }
 
+  async findNotificationById(notificationId: string) {
+    try {
+      return await this.findOne({ where: { id: notificationId } });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
   async removeNotification(notificationDTO: NotificationDTO) {
     try {
       const notification = await this.getNotification(notificationDTO);
@@ -68,6 +76,16 @@ export class NotificationRepository extends Repository<Notification> {
 
       await this.softDelete(notification.id);
       return true;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async receiveNotification(notificationId: string) {
+    try {
+      await this.update(notificationId, {
+        status: NotificationStatus.Received,
+      });
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
