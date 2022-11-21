@@ -79,4 +79,24 @@ export class CategoryRepository extends TreeRepository<Category> {
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async getCategoryTop() {
+    try {
+      const postCount = await this.createQueryBuilder('Category')
+        .leftJoinAndSelect('Category.posts', 'Post')
+        .loadRelationCountAndMap('Category.PostCount', 'Category.posts')
+        // .orderBy('Category.PostCount', 'DESC')
+        .select('Category')
+        .getMany();
+
+      postCount
+        .sort((a, b) => (a['PostCount'] < b['PostCount'] ? 1 : -1))
+        .slice(0, 5);
+
+      return postCount;
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
 }

@@ -39,4 +39,9 @@ export class CategoryController {
   async getCategoryTree() {
     return await this.categoryService.getCategoryTree();
   }
+
+  @Get('top')
+  async getCategoryTop() {
+    return await this.categoryService.getCategoryTop();
+  }
 }
