@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { Page } from 'src/common/dto/Page';
 import { PagedData } from 'src/common/dto/PageData';
 import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
-import { DataSource, In, Like, Not, Repository } from 'typeorm';
+import { DataSource, ILike, In, Like, Not, Repository } from 'typeorm';
 import { CreateUserDTO } from '../dtos/createUser.dto';
 import { UpdateUserDTO } from '../dtos/updateUser.dto';
 import { UserPage } from '../dtos/userPage.dto';
@@ -173,6 +173,40 @@ export class UserRepository extends Repository<User> {
             : null,
         };
       });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async findUser(dataSearch: string) {
+    try {
+      const listUsers = await this.createQueryBuilder('User')
+        .where('User.username ILIKE :username', { username: `%${dataSearch}%` })
+        .leftJoinAndSelect('User.followers', 'UserFollow')
+        .loadRelationCountAndMap('User.NumberOfFollowers', 'User.followers')
+        .select('User')
+        .take(10)
+        .getMany();
+
+      const listUser = listUsers.map((data) => {
+        return {
+          id: data.id,
+          username: data.username,
+          email: data.email,
+          avatarLink: data.avatarId
+            ? `http://localhost:3000/file/${data.avatarId}`
+            : null,
+        };
+      });
+
+      const countUser = await this.count({
+        where: { username: ILike(`%${dataSearch}%`) },
+      });
+
+      return {
+        data: listUser,
+        count: countUser,
+      };
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
