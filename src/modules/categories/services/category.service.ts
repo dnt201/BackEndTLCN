@@ -90,4 +90,8 @@ export class CategoryService {
   async getCategoryTop() {
     return await this.categoryRepository.getCategoryTop();
   }
+
+  async findCategory(dataSearch: string) {
+    return await this.categoryRepository.findCategory(dataSearch);
+  }
 }

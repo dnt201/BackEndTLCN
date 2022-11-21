@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, ILike, In, Repository } from 'typeorm';
 
 import { Post } from '../entities/post.entity';
 import { CreatePostDTO } from '../dtos/createPost.dto';
@@ -132,7 +132,7 @@ export class PostRepository extends Repository<Post> {
     }
   }
 
-  async getAllPost(page: PostPage) {
+  async getAllPost(page: PostPage, dataSearch: string) {
     const takeQuery = page.size ?? 10;
     const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
 
@@ -146,9 +146,9 @@ export class PostRepository extends Repository<Post> {
       //   take: takeQuery,
       //   skip: (skipQuery - 1) * takeQuery,
       // });
-
       const listPostQuery = await this.createQueryBuilder('post')
         .where('post.isPublic = :isPublic', { isPublic: true })
+        .where('post.title ILIKE :title', { title: `%${dataSearch}%` })
         .leftJoin('post.postComments', 'PostComment')
         .leftJoin('PostComment.postReplies', 'PostReply')
         .leftJoin('post.owner', 'User')
@@ -178,7 +178,9 @@ export class PostRepository extends Repository<Post> {
         ConvertPostWithMoreInfo(data),
       );
 
-      const totalPost = await this.count({ where: { isPublic: true } });
+      const totalPost = await this.count({
+        where: { isPublic: true, title: ILike(`%${dataSearch}%`) },
+      });
 
       dataReturn.data = listPostWithData;
       dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);

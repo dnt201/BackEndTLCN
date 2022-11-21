@@ -503,8 +503,8 @@ export class PostService {
     return reply ? getReplyWithImageLink(reply) : null;
   }
 
-  async getAllPost(page: PostPage) {
-    const listPosts = await this.postRepository.getAllPost(page);
+  async getAllPost(page: PostPage, dataSearch: string) {
+    const listPosts = await this.postRepository.getAllPost(page, dataSearch);
     return listPosts;
   }
 
