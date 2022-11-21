@@ -48,6 +48,11 @@ export class PostTagController {
     return dataReturn;
   }
 
+  @Get('top')
+  async getTopPostTag() {
+    return await this.postTagService.getTopPostTag();
+  }
+
   @Post('create')
   @UseGuards(PermissionGuard(ListPermission.AddPostTag))
   @UseInterceptors(

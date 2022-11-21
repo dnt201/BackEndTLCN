@@ -642,6 +642,9 @@ export class PostService {
 
   async editImage(postId: string, fileData: FileDTO) {
     const post = await this.getPostById(postId);
+    if (!post) {
+      throw new NotFoundException(`Not found post with id: ${postId}`);
+    }
     let thumbnailLink = post.thumbnailLink;
     if (thumbnailLink) {
       const part = thumbnailLink.split('/');

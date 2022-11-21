@@ -66,6 +66,14 @@ export class UsersController {
     return await this.usersService.getAllUserForTag(existedIds, name);
   }
 
+  @Get('/find')
+  async findUser(@Query() searchData) {
+    let dataSearch = '';
+    if (searchData['name'] && searchData['name'].length > 0)
+      dataSearch = searchData['name'];
+    return await this.usersService.findUser(dataSearch);
+  }
+
   @Put('/admin/edit/:id')
   @UseGuards(PermissionGuard(ListPermission.UpdateUserInfo))
   async updateUserInfoWithAdminRole(

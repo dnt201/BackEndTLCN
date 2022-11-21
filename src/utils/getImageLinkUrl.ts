@@ -59,7 +59,7 @@ export function getPostWithThumbnailLink(post: Post) {
     dateModified: undefined,
     dateDeleted: undefined,
     thumbnailId: undefined,
-    thumbnailLink: post.thumbnailId
+    thumbnailLink: post?.thumbnailId
       ? `http://localhost:3000/file/${post.thumbnailId}`
       : null,
   };

@@ -196,6 +196,11 @@ export class UsersService {
       currentHashedRefreshToken: undefined,
     };
   }
+
+  async findUser(dataSearch: string) {
+    return await this.userRepository.findUser(dataSearch);
+  }
+
   async setCurrentRefreshToken(refreshToken: string, userId: string) {
     const currentHashedRefreshToken = await bcrypt.hash(refreshToken, 10);
     await this.userRepository.update(userId, {

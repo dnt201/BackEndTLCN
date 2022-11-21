@@ -86,4 +86,8 @@ export class CategoryService {
     );
     return this.getCategoryById(categoryId);
   }
+
+  async getCategoryTop() {
+    return await this.categoryRepository.getCategoryTop();
+  }
 }
