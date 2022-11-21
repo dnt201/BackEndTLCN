@@ -5,6 +5,7 @@ import { AuthService } from 'src/auth/services/auth.service';
 import { SocketConnectionService } from 'src/modules/connection/services/socketConnection.service';
 import { SettingService } from 'src/modules/settings/services/setting.service';
 import { NotificationDTO } from '../dto/notification.dto';
+import { NotificationPage } from '../dto/notificationPage.dto';
 import { NotificationRepository } from '../repository/notification.repository';
 
 @Injectable()
@@ -80,6 +81,10 @@ export class NotificationService {
 
   async getNotification(notificationDTO: NotificationDTO) {
     return await this.notificationRepository.getNotification(notificationDTO);
+  }
+
+  async getNotifications(userId: string, page: NotificationPage) {
+    return await this.notificationRepository.getNotifications(userId, page);
   }
 
   async removeNotification(notificationDTO: NotificationDTO) {

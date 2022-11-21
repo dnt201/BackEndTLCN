@@ -1,6 +1,10 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Page } from 'src/common/dto/Page';
+import { PagedData } from 'src/common/dto/PageData';
+import { ReturnResult } from 'src/common/dto/ReturnResult';
 import { DataSource, Repository } from 'typeorm';
 import { NotificationDTO } from '../dto/notification.dto';
+import { NotificationPage } from '../dto/notificationPage.dto';
 import { Notification } from '../entity/notification.entity';
 
 @Injectable()
@@ -28,6 +32,30 @@ export class NotificationRepository extends Repository<Notification> {
           userId: notificationDTO.userId,
         },
       });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getNotifications(userId: string, page: NotificationPage) {
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<Notification> = new PagedData<Notification>();
+
+    try {
+      const notificationList = await this.find({
+        where: { userId: userId },
+        order: { dateCreated: 'DESC' },
+        take: takeQuery,
+        skip: (skipQuery - 1) * takeQuery,
+      });
+
+      const totalNotification = await this.count({ where: { userId: userId } });
+      dataReturn.data = notificationList;
+      dataReturn.page = new Page(takeQuery, skipQuery, totalNotification, []);
+
+      return dataReturn;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
