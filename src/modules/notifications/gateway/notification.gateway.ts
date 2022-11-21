@@ -50,4 +50,14 @@ export class NotificationGateway
 
   //   this.server.sockets.to(userToken).emit('receiveNotification', data.data);
   // }
+
+  @SubscribeMessage('receiveNotification')
+  async receiveNotification(@MessageBody() notificationId: string) {
+    this.notificationService.receiveNotification(notificationId);
+  }
+
+  @SubscribeMessage('clickNotification')
+  async clickNotification(@MessageBody() notificationId: string) {
+    this.notificationService.clickNotification(notificationId);
+  }
 }

@@ -1,3 +1,4 @@
+import { NotificationController } from './controllers/notification.controller';
 import { NotificationRepository } from './repository/notification.repository';
 import { SettingModule } from './../settings/setting.module';
 import { forwardRef, Module } from '@nestjs/common';
@@ -15,7 +16,7 @@ import { Notification } from './entity/notification.entity';
     ConnectionModule,
     SettingModule,
   ],
-  controllers: [],
+  controllers: [NotificationController],
   providers: [NotificationGateway, NotificationService, NotificationRepository],
   exports: [NotificationService],
 })

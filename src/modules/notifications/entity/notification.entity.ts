@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { ICreated } from 'src/common/model/ICreated.interface';
 import { IDeleted } from 'src/common/model/IDeleted.interface';
 import {
@@ -43,12 +44,15 @@ export class Notification implements ICreated, IDeleted {
   public refId: string;
 
   @Column({ default: false })
+  @Exclude()
   public deleted: boolean;
 
   @CreateDateColumn()
+  @Exclude()
   public dateCreated: Date;
 
   @DeleteDateColumn()
+  @Exclude()
   public dateDeleted: Date;
 
   @Index('isClicked')
