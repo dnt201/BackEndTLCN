@@ -29,7 +29,7 @@ export class NotificationService {
 
   async getUserFromSocket(socket: Socket) {
     try {
-      const authorization = socket.handshake.headers.authorization;
+      const authorization = socket.handshake.auth.token;
       if (!authorization) throw new Error(`Invalid credentials`);
       const authToken = authorization.split(' ')[1];
       const user = await this.authService.getUserFromAuthToken(authToken);
