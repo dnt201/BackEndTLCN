@@ -1,7 +1,9 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Page } from 'src/common/dto/Page';
 import { PagedData } from 'src/common/dto/PageData';
+import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
 import { DataSource, ILike, TreeRepository } from 'typeorm';
+import { CategoryPage } from '../dtos/categoryPage.dto';
 import { CreateCategoryDTO } from '../dtos/createCategory.dto';
 import { UpdateCategoryDTO } from '../dtos/updateCategory.dto';
 import { Category } from '../entities/category.entity';
@@ -98,6 +100,43 @@ export class CategoryRepository extends TreeRepository<Category> {
       return postCount;
     } catch (error) {
       console.log(error);
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getAllCategory(page: CategoryPage, dataSearch: string) {
+    const orderQuery =
+      page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);
+
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<Category> = new PagedData<Category>();
+
+    try {
+      const listCategory = await this.find({
+        where: {
+          categoryName: ILike(`%${dataSearch}%`),
+        },
+        order: orderQuery,
+        take: takeQuery,
+        skip: (skipQuery - 1) * takeQuery,
+      });
+      const totalCategory = await this.count({
+        where: {
+          categoryName: ILike(`%${dataSearch}%`),
+        },
+      });
+
+      dataReturn.data = listCategory;
+      dataReturn.page = new Page(
+        takeQuery,
+        skipQuery,
+        totalCategory,
+        page?.order ?? [],
+      );
+      return dataReturn;
+    } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
   }
