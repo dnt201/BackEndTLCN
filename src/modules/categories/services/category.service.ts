@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { CategoryPage } from '../dtos/categoryPage.dto';
 import { CreateCategoryDTO } from '../dtos/createCategory.dto';
 import { UpdateCategoryDTO } from '../dtos/updateCategory.dto';
 import { CategoryRepository } from '../repositories/category.repository';
@@ -93,5 +94,9 @@ export class CategoryService {
 
   async findCategory(dataSearch: string) {
     return await this.categoryRepository.findCategory(dataSearch);
+  }
+
+  async getAllCategory(page: CategoryPage, dataSearch: string) {
+    return await this.categoryRepository.getAllCategory(page, dataSearch);
   }
 }
