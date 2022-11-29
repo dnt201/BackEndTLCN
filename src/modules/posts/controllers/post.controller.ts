@@ -454,10 +454,11 @@ export class PostController {
         const userId = data.result;
         const listPostWithFollowInfo = await Promise.all(
           listPost.data.map(async (data) => {
-            const isFollow = this.postService.getFollowPostById(
+            const isFollow = await this.postService.getFollowPostById(
               String(userId),
               data.id,
             );
+            console.log(data.id, ' ', isFollow);
             return { ...data, isFollow: isFollow ? true : false };
           }),
         );
