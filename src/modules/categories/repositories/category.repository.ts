@@ -91,14 +91,14 @@ export class CategoryRepository extends TreeRepository<Category> {
 
   async getCategoryTop() {
     try {
-      const postCount = await this.createQueryBuilder('Category')
+      let postCount = await this.createQueryBuilder('Category')
         .leftJoinAndSelect('Category.posts', 'Post')
         .loadRelationCountAndMap('Category.PostCount', 'Category.posts')
         // .orderBy('Category.PostCount', 'DESC')
         .select('Category')
         .getMany();
 
-      postCount
+      postCount = postCount
         .sort((a, b) => (a['PostCount'] < b['PostCount'] ? 1 : -1))
         .slice(0, 5);
 
