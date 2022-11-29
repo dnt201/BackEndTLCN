@@ -20,7 +20,6 @@ import { PostTag_Permission as ListPermission } from '../permission/permission';
 import { PermissionGuard } from 'src/auth/guards/permission.guard';
 import { CreatePostTagDTO } from '../dtos/createPostTag.dto';
 import { UpdatePostTagDTO } from '../dtos/updatePostTag.dto';
-import { FindOneParams } from 'src/utils/findOneParams';
 import { PostTagPage } from '../dtos/posttagPage.dto';
 import { PagedData } from 'src/common/dto/PageData';
 import { ReturnResult } from 'src/common/dto/ReturnResult';
@@ -132,12 +131,45 @@ export class PostTagController {
 
   @Delete('delete/:id')
   @UseGuards(PermissionGuard(ListPermission.DeletePostTag))
-  async deletePostTag(@Param() { id }: FindOneParams) {
+  async deletePostTag(@Param('id') id: string) {
     const existedPostTag = await this.postTagService.getPostTagById(id);
 
     if (!existedPostTag)
       throw new NotFoundException(`Not found Post Tag with id ${id}`);
 
-    return await this.postTagService.deletePostTag(Number(id));
+    return await this.postTagService.deletePostTag(id);
+  }
+
+  @Get('hide')
+  @UseGuards(PermissionGuard(ListPermission.GetHidePostTag))
+  async getAllPostTagHide(@Body() page: PostTagPage, @Query() searchData) {
+    const dataReturn: ReturnResult<PagedData<PostTag>> = new ReturnResult<
+      PagedData<PostTag>
+    >();
+
+    let dataSearch = '';
+    if (searchData?.name == null) dataSearch = '';
+    else dataSearch = searchData.name;
+
+    const value = await this.postTagService.getAllPostTagDelete(
+      page,
+      dataSearch,
+    );
+    dataReturn.result = value;
+    dataReturn.message = null;
+
+    return dataReturn;
+  }
+
+  @Post('hide/:id')
+  @UseGuards(PermissionGuard(ListPermission.HidePostTag))
+  async hidePostTag(@Param('id') id: string) {
+    return await this.postTagService.hidePostTag(id);
+  }
+
+  @Post('show/:id')
+  @UseGuards(PermissionGuard(ListPermission.ShowPostTag))
+  async showPostTag(@Param('id') id: string) {
+    return await this.postTagService.showPostTag(id);
   }
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpStatus,
   Injectable,
   InternalServerErrorException,
@@ -36,7 +37,7 @@ export class PostTagRepository extends Repository<PostTag> {
     }
   }
 
-  async deletePostTag(id: number) {
+  async deletePostTag(id: string) {
     try {
       const deletedResponse = await this.delete(id);
       if (!deletedResponse.affected) {
@@ -49,7 +50,6 @@ export class PostTagRepository extends Repository<PostTag> {
       else throw new InternalServerErrorException(error.message);
     }
   }
-
   async getPostTagById(id: string) {
     try {
       return await this.findOne({ where: [{ id: id }] });
@@ -129,6 +129,79 @@ export class PostTagRepository extends Repository<PostTag> {
       });
     } catch (error) {
       throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getAllPostTagDelete(page: PostTagPage, dataSearch: string) {
+    const orderQuery =
+      page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);
+
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<PostTag> = new PagedData<PostTag>();
+
+    try {
+      const listPostTag = await this.find({
+        where: {
+          postTagName: ILike(`%${dataSearch}%`),
+          deleted: true,
+        },
+        order: orderQuery,
+        take: takeQuery,
+        withDeleted: true,
+        skip: (skipQuery - 1) * takeQuery,
+      });
+      const totalPostTag = await this.count({
+        where: {
+          postTagName: ILike(`%${dataSearch}%`),
+          deleted: true,
+        },
+        withDeleted: true,
+      });
+
+      dataReturn.data = listPostTag;
+      dataReturn.page = new Page(
+        takeQuery,
+        skipQuery,
+        totalPostTag,
+        page?.order ?? [],
+      );
+      return dataReturn;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async hidePostTag(id: string) {
+    try {
+      const postTag = await this.getPostTagById(id);
+      await this.save({ ...postTag, deleted: true });
+      const deletedResponse = await this.softDelete({ id: id });
+      if (!deletedResponse.affected) {
+        throw new BadRequestException(`Post Tag does not exist`);
+      }
+      return true;
+    } catch (error) {
+      if (error.code === HttpStatus.BAD_REQUEST)
+        throw new BadRequestException(error.message);
+      else throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async showPostTag(id: string) {
+    try {
+      const restoreResponse = await this.restore({ id: id });
+      if (!restoreResponse.affected) {
+        throw new BadRequestException(`Post Tag does not exist`);
+      }
+      const postTag = await this.getPostTagById(id);
+      await this.save({ ...postTag, deleted: false });
+      return postTag;
+    } catch (error) {
+      if (error.code === HttpStatus.BAD_REQUEST)
+        throw new BadRequestException(error.message);
+      else throw new InternalServerErrorException(error.message);
     }
   }
 }
