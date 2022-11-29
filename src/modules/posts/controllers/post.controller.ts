@@ -431,7 +431,7 @@ export class PostController {
     return await this.postService.getReplyById(replyId);
   }
 
-  @Get('/all')
+  @Post('/all')
   async getAllPost(
     @Headers() headers,
     @Body() page: PostPage,
@@ -492,7 +492,7 @@ export class PostController {
   //   return dataReturn;
   // }
 
-  @Get('/all-by-category/:id')
+  @Post('/all-by-category/:id')
   async getAllPostWithCategory(
     @Headers() headers,
     @Param('id') categoryId: string,
@@ -530,7 +530,7 @@ export class PostController {
     }
   }
 
-  @Get('/all-by-posttag')
+  @Post('/all-by-posttag')
   async getAllPostWithPostTag(
     @Headers() headers,
     @Body() body: GetAllPostByPostTag,
@@ -570,7 +570,7 @@ export class PostController {
     }
   }
 
-  @Get('/all-by-user/:id')
+  @Post('/all-by-user/:id')
   async getAllPostWithUser(
     @Headers() headers,
     @Param('id') userId: string,
@@ -605,7 +605,7 @@ export class PostController {
     }
   }
 
-  @Get('all-post-vote')
+  @Post('all-post-vote')
   @UseGuards(JwtAuthenticationGuard)
   async getAllPostVoteByUserId(
     @Req() request: RequestWithUser,
@@ -636,7 +636,7 @@ export class PostController {
     return dataReturn;
   }
 
-  @Get('all-post-view')
+  @Post('all-post-view')
   @UseGuards(JwtAuthenticationGuard)
   async getAllPostViewByUserId(
     @Req() request: RequestWithUser,
@@ -667,7 +667,7 @@ export class PostController {
     return dataReturn;
   }
 
-  @Get('all-post-follow')
+  @Post('all-post-follow')
   @UseGuards(JwtAuthenticationGuard)
   async getAllPostFollowByUserId(
     @Req() request: RequestWithUser,
