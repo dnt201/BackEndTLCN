@@ -1,4 +1,4 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from 'src/auth/services/auth.service';
@@ -12,6 +12,7 @@ import { NotificationRepository } from '../repository/notification.repository';
 export class NotificationService {
   @WebSocketServer()
   server: Server;
+  private readonly logger = new Logger(NotificationService.name);
 
   constructor(
     @Inject(forwardRef(() => AuthService))
@@ -44,7 +45,7 @@ export class NotificationService {
   ) {
     const socketToken = await this.connectStore.getConnection(userId);
 
-    console.log(notificationType, notificationBody);
+    this.logger.log(notificationType, notificationBody);
 
     if (socketToken) {
       this.server.sockets
