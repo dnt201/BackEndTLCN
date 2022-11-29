@@ -40,7 +40,7 @@ import { HeaderNotification } from 'src/common/constants/HeaderNotification.cons
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get('/all')
+  @Post('/all')
   // @UseGuards(RoleGuard(process.env.ADMIN_ROLE))
   @UseGuards(PermissionGuard(ListPermission.ViewAllUser))
   async getAllUsers(@Body() page: UserPage) {

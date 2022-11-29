@@ -30,7 +30,7 @@ import { FilesInterceptor } from 'src/modules/files/interceptors/file.intercepto
 export class PostTagController {
   constructor(private readonly postTagService: PostTagService) {}
 
-  @Get()
+  @Post()
   async getAllPostTag(@Body() page: PostTagPage, @Query() searchData) {
     const dataReturn: ReturnResult<PagedData<PostTag>> = new ReturnResult<
       PagedData<PostTag>
@@ -140,7 +140,7 @@ export class PostTagController {
     return await this.postTagService.deletePostTag(id);
   }
 
-  @Get('hide')
+  @Post('hide')
   @UseGuards(PermissionGuard(ListPermission.GetHidePostTag))
   async getAllPostTagHide(@Body() page: PostTagPage, @Query() searchData) {
     const dataReturn: ReturnResult<PagedData<PostTag>> = new ReturnResult<
