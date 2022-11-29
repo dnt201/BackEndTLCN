@@ -45,7 +45,7 @@ export class CategoryController {
   //   return await this.categoryService.getCategoryTree();
   // }
 
-  @Get()
+  @Post()
   async getAllCategory(@Body() page: CategoryPage, @Query() searchData) {
     const dataReturn: ReturnResult<PagedData<Category>> = new ReturnResult<
       PagedData<Category>
@@ -75,7 +75,7 @@ export class CategoryController {
     return await this.categoryService.findCategory(dataSearch);
   }
 
-  @Get('delete')
+  @Post('delete')
   @UseGuards(PermissionGuard(ListPermission.GetDeleteCategory))
   async getAllCategoryDelete(@Body() page: CategoryPage, @Query() searchData) {
     const dataReturn: ReturnResult<PagedData<Category>> = new ReturnResult<
