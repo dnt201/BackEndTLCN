@@ -1,5 +1,6 @@
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToMany,
@@ -8,9 +9,11 @@ import {
 } from 'typeorm';
 import { Post } from './post.entity';
 import { File } from 'src/modules/files/entities/file.entity';
+import { IDeleted } from 'src/common/model/IDeleted.interface';
+import { Exclude } from 'class-transformer';
 
 @Entity('PostTag')
-export class PostTag {
+export class PostTag implements IDeleted {
   @PrimaryGeneratedColumn('uuid')
   public id?: string;
 
@@ -32,4 +35,12 @@ export class PostTag {
   @JoinColumn({ name: 'thumbnailId' })
   @OneToOne(() => File, { nullable: true })
   public thumbnail?: File;
+
+  @Exclude()
+  @Column({ default: false })
+  deleted: boolean;
+
+  @Exclude()
+  @DeleteDateColumn()
+  dateDeleted: Date;
 }
