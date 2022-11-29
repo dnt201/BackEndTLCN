@@ -16,4 +16,5 @@ export class PostWithMoreInfo {
   like: number;
   comment: number;
   view: number;
+  thumbnailLink: string;
 }

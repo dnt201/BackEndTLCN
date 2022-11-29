@@ -104,7 +104,6 @@ export class CategoryRepository extends TreeRepository<Category> {
 
       return postCount;
     } catch (error) {
-      console.log(error);
       throw new InternalServerErrorException(error.message);
     }
   }

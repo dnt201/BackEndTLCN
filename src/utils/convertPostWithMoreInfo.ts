@@ -22,6 +22,9 @@ export function ConvertPostWithMoreInfo(data) {
       (data.commentCount ? data.commentCount : 0) +
       (data.replyCount ? data.replyCount : 0),
     isFollow: false,
+    thumbnailLink: data.thumbnailId
+      ? `http://localhost:3000/file/${data.thumbnailId}`
+      : null,
   };
   return dataReturn;
 }
