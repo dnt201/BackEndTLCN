@@ -104,14 +104,14 @@ export class PostTagRepository extends Repository<PostTag> {
   }
 
   async getTopPostTag() {
-    const postCount = await this.createQueryBuilder('PostTag')
+    let postCount = await this.createQueryBuilder('PostTag')
       .leftJoinAndSelect('PostTag.posts', 'Post')
       .loadRelationCountAndMap('PostTag.PostCount', 'PostTag.posts')
       // .orderBy('Category.PostCount', 'DESC')
       .select('PostTag')
       .getMany();
 
-    postCount
+    postCount = postCount
       .sort((a, b) => (a['PostCount'] < b['PostCount'] ? 1 : -1))
       .slice(0, 5);
 
