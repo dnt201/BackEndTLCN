@@ -74,4 +74,37 @@ export class CategoryController {
       dataSearch = searchData['name'];
     return await this.categoryService.findCategory(dataSearch);
   }
+
+  @Get('delete')
+  @UseGuards(PermissionGuard(ListPermission.GetDeleteCategory))
+  async getAllCategoryDelete(@Body() page: CategoryPage, @Query() searchData) {
+    const dataReturn: ReturnResult<PagedData<Category>> = new ReturnResult<
+      PagedData<Category>
+    >();
+
+    let dataSearch = '';
+    if (searchData?.name == null) dataSearch = '';
+    else dataSearch = searchData.name;
+
+    const value = await this.categoryService.getAllCategoryDelete(
+      page,
+      dataSearch,
+    );
+    dataReturn.result = value;
+    dataReturn.message = null;
+
+    return dataReturn;
+  }
+
+  @Post('hide/:id')
+  @UseGuards(PermissionGuard(ListPermission.HideCategory))
+  async hideCategory(@Param('id') id: string) {
+    return await this.categoryService.hideCategory(id);
+  }
+
+  @Post('show/:id')
+  @UseGuards(PermissionGuard(ListPermission.ShowCategory))
+  async showCategory(@Param('id') id: string) {
+    return await this.categoryService.showCategory(id);
+  }
 }

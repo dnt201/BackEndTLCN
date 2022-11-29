@@ -99,4 +99,16 @@ export class CategoryService {
   async getAllCategory(page: CategoryPage, dataSearch: string) {
     return await this.categoryRepository.getAllCategory(page, dataSearch);
   }
+
+  async getAllCategoryDelete(page: CategoryPage, dataSearch: string) {
+    return await this.categoryRepository.getAllCategoryDelete(page, dataSearch);
+  }
+
+  async hideCategory(id: string) {
+    return await this.categoryRepository.hideCategory(id);
+  }
+
+  async showCategory(id: string) {
+    return await this.categoryRepository.showCategory(id);
+  }
 }

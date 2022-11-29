@@ -1,4 +1,9 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Page } from 'src/common/dto/Page';
 import { PagedData } from 'src/common/dto/PageData';
 import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
@@ -162,6 +167,79 @@ export class CategoryRepository extends TreeRepository<Category> {
       return dataReturn;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async getAllCategoryDelete(page: CategoryPage, dataSearch: string) {
+    const orderQuery =
+      page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);
+
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<Category> = new PagedData<Category>();
+
+    try {
+      const listCategory = await this.find({
+        where: {
+          categoryName: ILike(`%${dataSearch}%`),
+          deleted: true,
+        },
+        order: orderQuery,
+        take: takeQuery,
+        withDeleted: true,
+        skip: (skipQuery - 1) * takeQuery,
+      });
+      const totalCategory = await this.count({
+        where: {
+          categoryName: ILike(`%${dataSearch}%`),
+          deleted: true,
+        },
+        withDeleted: true,
+      });
+
+      dataReturn.data = listCategory;
+      dataReturn.page = new Page(
+        takeQuery,
+        skipQuery,
+        totalCategory,
+        page?.order ?? [],
+      );
+      return dataReturn;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async hideCategory(id: string) {
+    try {
+      const category = await this.getCategoryById(id);
+      await this.save({ ...category, deleted: true });
+      const deletedResponse = await this.softDelete({ id: id });
+      if (!deletedResponse.affected) {
+        throw new BadRequestException(`Category does not exist`);
+      }
+      return true;
+    } catch (error) {
+      if (error.code === HttpStatus.BAD_REQUEST)
+        throw new BadRequestException(error.message);
+      else throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async showCategory(id: string) {
+    try {
+      const restoreResponse = await this.restore({ id: id });
+      if (!restoreResponse.affected) {
+        throw new BadRequestException(`Category does not exist`);
+      }
+      const category = await this.getCategoryById(id);
+      await this.save({ ...category, deleted: false });
+      return category;
+    } catch (error) {
+      if (error.code === HttpStatus.BAD_REQUEST)
+        throw new BadRequestException(error.message);
+      else throw new InternalServerErrorException(error.message);
     }
   }
 }
