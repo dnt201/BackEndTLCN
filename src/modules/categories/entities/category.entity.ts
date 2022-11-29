@@ -8,11 +8,14 @@ import {
   TreeParent,
   TreeChildren,
   OneToMany,
+  DeleteDateColumn,
 } from 'typeorm';
+import { IDeleted } from 'src/common/model/IDeleted.interface';
+import { Exclude } from 'class-transformer';
 
 @Entity('Category')
 @Tree('closure-table')
-export class Category {
+export class Category implements IDeleted {
   @PrimaryGeneratedColumn('uuid')
   public id: string;
 
@@ -25,6 +28,14 @@ export class Category {
 
   @TreeChildren()
   public childCategory: Category[];
+
+  @Exclude()
+  @Column({ default: false })
+  deleted: boolean;
+
+  @Exclude()
+  @DeleteDateColumn()
+  dateDeleted: Date;
 
   @OneToMany(() => Post, (post: Post) => post.category)
   public posts: Post[];
