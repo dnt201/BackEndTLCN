@@ -63,7 +63,7 @@ export class PostTagService {
     return await this.postTagRepository.updatePostTag(id, updatePostTagData);
   }
 
-  async deletePostTag(id: number) {
+  async deletePostTag(id: string) {
     return await this.postTagRepository.deletePostTag(id);
   }
 
@@ -73,11 +73,25 @@ export class PostTagService {
   }
 
   async getTopPostTag() {
-    return await this.postTagRepository.getTopPostTag();
+    const postTagList = await this.postTagRepository.getTopPostTag();
+    const postTagWithLink = postTagList.map((postTag) => {
+      return getPostTagWithThumbnailLink(postTag);
+    });
+    return postTagWithLink;
   }
 
   async getAllPostTags(page: PostTagPage, dataSearch: string) {
-    return await this.postTagRepository.getAllPostTags(page, dataSearch);
+    const postTagList = await this.postTagRepository.getAllPostTags(
+      page,
+      dataSearch,
+    );
+    const postTagWithLink = postTagList.data.map((postTag) => {
+      return getPostTagWithThumbnailLink(postTag);
+    });
+    return {
+      ...postTagList,
+      data: postTagWithLink,
+    };
   }
 
   async addThumbnail(postTagId: string, fileData: FileDTO) {
@@ -104,5 +118,28 @@ export class PostTagService {
     else {
       await this.addThumbnail(postTagId, fileData);
     }
+  }
+
+  async getAllPostTagDelete(page: PostTagPage, dataSearch: string) {
+    const postTagList = await this.postTagRepository.getAllPostTagDelete(
+      page,
+      dataSearch,
+    );
+    const PostTagWithLink = postTagList.data.map((postTag) => {
+      return getPostTagWithThumbnailLink(postTag);
+    });
+
+    return {
+      ...postTagList,
+      data: PostTagWithLink,
+    };
+  }
+  async hidePostTag(id: string) {
+    return await this.postTagRepository.hidePostTag(id);
+  }
+
+  async showPostTag(id: string) {
+    const postTag = await this.postTagRepository.showPostTag(id);
+    return getPostTagWithThumbnailLink(postTag);
   }
 }

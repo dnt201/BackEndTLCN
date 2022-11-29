@@ -45,6 +45,8 @@ export function getPostTagWithThumbnailLink(postTag: PostTag) {
   return {
     ...postTag,
     thumbnailId: undefined,
+    deleted: undefined,
+    dateDeleted: undefined,
     thumbnailLink: postTag.thumbnailId
       ? `http://localhost:3000/file/${postTag.thumbnailId}`
       : null,
