@@ -133,7 +133,6 @@ export class PostController {
     @Body() createPostInput: CreatePostInput,
   ) {
     const post = await this.postService.getPostById(postId);
-    console.log(post);
     if (!post?.id) {
       throw new NotFoundException(`Not found post with id: ${postId}`);
     }
@@ -454,7 +453,7 @@ export class PostController {
         const userId = data.result;
         const listPostWithFollowInfo = await Promise.all(
           listPost.data.map(async (data) => {
-            const isFollow = this.postService.getFollowPostById(
+            const isFollow = await this.postService.getFollowPostById(
               String(userId),
               data.id,
             );
