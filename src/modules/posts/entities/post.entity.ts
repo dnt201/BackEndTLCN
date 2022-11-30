@@ -40,6 +40,9 @@ export class Post implements ICreated, IModified, IDeleted {
   @CreateDateColumn()
   dateCreated: Date;
 
+  @Column({ default: null })
+  dateUpdated: Date;
+
   @UpdateDateColumn()
   dateModified: Date;
 

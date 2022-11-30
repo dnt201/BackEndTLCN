@@ -6,7 +6,7 @@ export function ConvertPostWithMoreInfo(data) {
   const dataReturn: PostWithMoreInfo = {
     id: data.id,
     title: data.title,
-    dateModified: data.dateModified,
+    dateModified: data.dateUpdated,
     owner: {
       id: data.owner.id,
       username: data.owner.username,

@@ -148,7 +148,7 @@ export class PostRepository extends Repository<Post> {
       // });
       const listPostQuery = await this.createQueryBuilder('post')
         .where('post.isPublic = :isPublic', { isPublic: true })
-        .where('post.title ILIKE :title', { title: `%${dataSearch}%` })
+        .andWhere('post.title ILIKE :title', { title: `%${dataSearch}%` })
         .leftJoin('post.postComments', 'PostComment')
         .leftJoin('PostComment.postReplies', 'PostReply')
         .leftJoin('post.owner', 'User')
@@ -161,7 +161,8 @@ export class PostRepository extends Repository<Post> {
           'post.replyCount',
           'post.postComments.postReplies',
         )
-        .orderBy('post.vote', 'DESC')
+        .orderBy('post.dateUpdated', 'DESC')
+        .addOrderBy('post.vote', 'DESC')
         .take(takeQuery)
         .skip((skipQuery - 1) * takeQuery)
         .select([
