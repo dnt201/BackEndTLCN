@@ -65,6 +65,7 @@ export class PostService {
     );
 
     await this.postRepository.save(postData);
+    await this.postRepository.update(postData.id, { dateUpdated: new Date() });
 
     return postData;
   }
@@ -84,6 +85,7 @@ export class PostService {
       throw new NotFoundException(`Post ${postId} does not exist`);
     }
     await this.postRepository.updatePost(postId, updatePostData);
+    await this.postRepository.update(postId, { dateUpdated: new Date() });
     return await this.postRepository.getPostById(postId);
   }
 

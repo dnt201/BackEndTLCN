@@ -5,7 +5,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { DataSource, ILike, In, Repository } from 'typeorm';
+import { Brackets, DataSource, ILike, In, Repository } from 'typeorm';
 
 import { Post } from '../entities/post.entity';
 import { CreatePostDTO } from '../dtos/createPost.dto';
@@ -148,7 +148,7 @@ export class PostRepository extends Repository<Post> {
       // });
       const listPostQuery = await this.createQueryBuilder('post')
         .where('post.isPublic = :isPublic', { isPublic: true })
-        .where('post.title ILIKE :title', { title: `%${dataSearch}%` })
+        .andWhere('post.title ILIKE :title', { title: `%${dataSearch}%` })
         .leftJoin('post.postComments', 'PostComment')
         .leftJoin('PostComment.postReplies', 'PostReply')
         .leftJoin('post.owner', 'User')
@@ -161,7 +161,8 @@ export class PostRepository extends Repository<Post> {
           'post.replyCount',
           'post.postComments.postReplies',
         )
-        .orderBy('post.vote', 'DESC')
+        .orderBy('post.dateUpdated', 'DESC')
+        .addOrderBy('post.vote', 'DESC')
         .take(takeQuery)
         .skip((skipQuery - 1) * takeQuery)
         .select([
@@ -408,24 +409,35 @@ export class PostRepository extends Repository<Post> {
     try {
       let PostData;
       if (userId === undefined) {
-        PostData = await this.findOne({
-          where: [{ id: postId, isPublic: true }],
-          relations: ['owner', 'category', 'tags'],
-        });
+        PostData = await this.createQueryBuilder('Post')
+          .where('Post.isPublic = :isPublic', { isPublic: true })
+          .andWhere('Post.id = :postId', { postId: postId })
+          .leftJoinAndSelect('Post.owner', 'User')
+          .leftJoinAndSelect('Post.category', 'Category')
+          .leftJoinAndSelect('Post.tags', 'Tag')
+          .leftJoinAndSelect('Post.postViews', 'View')
+          .loadRelationCountAndMap('Post.views', 'Post.postViews')
+          .getOne();
       } else {
-        PostData = await this.findOne({
-          where: [
-            { id: postId, isPublic: true },
-            {
-              id: postId,
-              isPublic: false,
-              owner: {
-                id: userId,
-              },
-            },
-          ],
-          relations: ['owner', 'category', 'tags'],
-        });
+        PostData = await this.createQueryBuilder('Post')
+          .leftJoinAndSelect('Post.owner', 'User')
+          .where('Post.id = :postId', { postId: postId })
+          .andWhere(
+            new Brackets((qb) => {
+              qb.where('Post.isPublic = :isPublic', { isPublic: true }).orWhere(
+                new Brackets((query) => {
+                  query
+                    .where('Post.isPublic = :isPublic', { isPublic: false })
+                    .andWhere('User.id = :userId', { userId: userId });
+                }),
+              );
+            }),
+          )
+          .leftJoinAndSelect('Post.category', 'Category')
+          .leftJoinAndSelect('Post.tags', 'Tag')
+          .leftJoinAndSelect('Post.postViews', 'View')
+          .loadRelationCountAndMap('Post.views', 'Post.postViews')
+          .getOne();
       }
 
       return PostData ? ConvertPostWithMoreInfo(PostData) : PostData;
