@@ -76,14 +76,33 @@ export class PostTagRepository extends Repository<PostTag> {
     const dataReturn: PagedData<PostTag> = new PagedData<PostTag>();
 
     try {
-      const listPostTag = await this.find({
-        where: {
-          displayName: ILike(`%${dataSearch}%`),
-        },
-        order: orderQuery,
-        take: takeQuery,
-        skip: (skipQuery - 1) * takeQuery,
-      });
+      // const listPostTag = await this.find({
+      //   where: {
+      //     displayName: ILike(`%${dataSearch}%`),
+      //   },
+      //   order: orderQuery,
+      //   take: takeQuery,
+      //   skip: (skipQuery - 1) * takeQuery,
+      // });
+      const listPostTag = await this.createQueryBuilder('PostTag')
+        .where('PostTag.displayName ILIKE :displayName', {
+          displayName: `%${dataSearch}%`,
+        })
+        .leftJoinAndSelect('PostTag.posts', 'Post')
+        .loadRelationCountAndMap(
+          'PostTag.PostCount',
+          'PostTag.posts',
+          'PostWithPostTag',
+          (subQuery) =>
+            subQuery.andWhere('PostWithPostTag.isPublic = :isPublic', {
+              isPublic: true,
+            }),
+        )
+        .orderBy(orderQuery)
+        .take(takeQuery)
+        .skip((skipQuery - 1) * takeQuery)
+        .select('PostTag')
+        .getMany();
       const totalPostTag = await this.count({
         where: {
           displayName: ILike(`%${dataSearch}%`),
@@ -106,7 +125,15 @@ export class PostTagRepository extends Repository<PostTag> {
   async getTopPostTag() {
     let postCount = await this.createQueryBuilder('PostTag')
       .leftJoinAndSelect('PostTag.posts', 'Post')
-      .loadRelationCountAndMap('PostTag.PostCount', 'PostTag.posts')
+      .loadRelationCountAndMap(
+        'PostTag.PostCount',
+        'PostTag.posts',
+        'PostWithPostTag',
+        (subQuery) =>
+          subQuery.andWhere('PostWithPostTag.isPublic = :isPublic', {
+            isPublic: true,
+          }),
+      )
       // .orderBy('Category.PostCount', 'DESC')
       .select('PostTag')
       .getMany();

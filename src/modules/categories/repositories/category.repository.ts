@@ -93,7 +93,15 @@ export class CategoryRepository extends TreeRepository<Category> {
     try {
       let postCount = await this.createQueryBuilder('Category')
         .leftJoinAndSelect('Category.posts', 'Post')
-        .loadRelationCountAndMap('Category.PostCount', 'Category.posts')
+        .loadRelationCountAndMap(
+          'Category.PostCount',
+          'Category.posts',
+          'PostWithCategory',
+          (subQuery) =>
+            subQuery.andWhere('PostWithCategory.isPublic = :isPublic', {
+              isPublic: true,
+            }),
+        )
         // .orderBy('Category.PostCount', 'DESC')
         .select('Category')
         .getMany();
@@ -118,14 +126,34 @@ export class CategoryRepository extends TreeRepository<Category> {
     const dataReturn: PagedData<Category> = new PagedData<Category>();
 
     try {
-      const listCategory = await this.find({
-        where: {
-          categoryName: ILike(`%${dataSearch}%`),
-        },
-        order: orderQuery,
-        take: takeQuery,
-        skip: (skipQuery - 1) * takeQuery,
-      });
+      // const listCategory = await this.find({
+      //   where: {
+      //     categoryName: ILike(`%${dataSearch}%`),
+      //   },
+      //   order: orderQuery,
+      //   take: takeQuery,
+      //   skip: (skipQuery - 1) * takeQuery,
+      // });
+      const listCategory = await this.createQueryBuilder('category')
+        .where('category.categoryName ILIKE :categoryName', {
+          categoryName: `%${dataSearch}%`,
+        })
+        .leftJoinAndSelect('category.posts', 'Post')
+        .loadRelationCountAndMap(
+          'category.PostCount',
+          'category.posts',
+          'PostWithCategory',
+          (subQuery) =>
+            subQuery.andWhere('PostWithCategory.isPublic = :isPublic', {
+              isPublic: true,
+            }),
+        )
+        .orderBy(orderQuery)
+        .take(takeQuery)
+        .skip((skipQuery - 1) * takeQuery)
+        .select('category')
+        .getMany();
+
       const totalCategory = await this.count({
         where: {
           categoryName: ILike(`%${dataSearch}%`),
