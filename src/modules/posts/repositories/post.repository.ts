@@ -486,7 +486,7 @@ export class PostRepository extends Repository<Post> {
               qb.where('Post.isPublic = :isPublic', { isPublic: true }).orWhere(
                 new Brackets((query) => {
                   query
-                    .where('Post.isPublic = :isPublic', { isPublic: false })
+                    .where('Post.isPublic = :isPrivate', { isPrivate: false })
                     .andWhere('User.id = :userId', { userId: userId });
                 }),
               );
