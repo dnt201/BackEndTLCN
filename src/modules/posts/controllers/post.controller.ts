@@ -491,6 +491,25 @@ export class PostController {
   //   return dataReturn;
   // }
 
+  @Post('/all-need-approve')
+  @UseGuards(PermissionGuard(ListPermission.GetAllPostNeedApprove))
+  async getAllPostNeedApprove(@Body() page: PostPage, @Query() searchData) {
+    const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
+      new ReturnResult<PagedData<PostWithMoreInfo>>();
+
+    let dataSearch = '';
+    if (searchData['name'] && searchData['name'].length > 0)
+      dataSearch = searchData['name'];
+
+    const listPost = await this.postService.getAllPostNeedApprove(
+      page,
+      dataSearch,
+    );
+    dataReturn.result = listPost;
+    dataReturn.message = null;
+    return dataReturn;
+  }
+
   @Post('/all-by-category/:id')
   async getAllPostWithCategory(
     @Headers() headers,
