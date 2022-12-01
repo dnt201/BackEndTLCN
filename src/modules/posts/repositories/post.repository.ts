@@ -191,6 +191,65 @@ export class PostRepository extends Repository<Post> {
     }
   }
 
+  async getAllPostNeedApprove(page: PostPage, dataSearch: string) {
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<PostWithMoreInfo> =
+      new PagedData<PostWithMoreInfo>();
+
+    try {
+      // const listPost = await this.find({
+      //   relations: ['owner', 'category', 'tags'],
+      //   order: orderQuery,
+      //   take: takeQuery,
+      //   skip: (skipQuery - 1) * takeQuery,
+      // });
+      const listPostQuery = await this.createQueryBuilder('post')
+        .where('post.isPublic = :isPublic', { isPublic: false })
+        .andWhere('post.title ILIKE :title', { title: `%${dataSearch}%` })
+        .leftJoin('post.postComments', 'PostComment')
+        .leftJoin('PostComment.postReplies', 'PostReply')
+        .leftJoin('post.owner', 'User')
+        .leftJoin('post.category', 'Category')
+        .leftJoin('post.tags', 'PostTag')
+        .leftJoin('post.postViews', 'PostView')
+        .loadRelationCountAndMap('post.views', 'post.postViews')
+        .loadRelationCountAndMap('post.commentCount', 'post.postComments')
+        .loadRelationCountAndMap(
+          'post.replyCount',
+          'post.postComments.postReplies',
+        )
+        .orderBy('post.dateUpdated', 'ASC')
+        .addOrderBy('post.vote', 'DESC')
+        .take(takeQuery)
+        .skip((skipQuery - 1) * takeQuery)
+        .select([
+          'post',
+          'PostComment',
+          'PostReply',
+          'User',
+          'Category',
+          'PostTag',
+        ])
+        .getMany();
+
+      const listPostWithData = listPostQuery.map((data) =>
+        ConvertPostWithMoreInfo(data),
+      );
+
+      const totalPost = await this.count({
+        where: { isPublic: false, title: ILike(`%${dataSearch}%`) },
+      });
+
+      dataReturn.data = listPostWithData;
+      dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
+      return dataReturn;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
   async getAllPublicPostByUserId(userId: string) {
     try {
       const post = await this.find({
@@ -427,7 +486,7 @@ export class PostRepository extends Repository<Post> {
               qb.where('Post.isPublic = :isPublic', { isPublic: true }).orWhere(
                 new Brackets((query) => {
                   query
-                    .where('Post.isPublic = :isPublic', { isPublic: false })
+                    .where('Post.isPublic = :isPrivate', { isPrivate: false })
                     .andWhere('User.id = :userId', { userId: userId });
                 }),
               );

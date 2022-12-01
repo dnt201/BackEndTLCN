@@ -510,6 +510,14 @@ export class PostService {
     return listPosts;
   }
 
+  async getAllPostNeedApprove(page: PostPage, dataSearch: string) {
+    const listPosts = await this.postRepository.getAllPostNeedApprove(
+      page,
+      dataSearch,
+    );
+    return listPosts;
+  }
+
   async getAllPublicPostByUserId(userId: string) {
     const listPosts = await this.postRepository.getAllPublicPostByUserId(
       userId,
