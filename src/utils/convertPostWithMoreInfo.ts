@@ -6,6 +6,7 @@ export function ConvertPostWithMoreInfo(data) {
   const dataReturn: PostWithMoreInfo = {
     id: data.id,
     title: data.title,
+    status: data.isPublic ? 'Approve' : 'Waiting',
     dateModified: data.dateUpdated,
     owner: {
       id: data.owner.id,
