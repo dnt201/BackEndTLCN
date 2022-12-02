@@ -29,6 +29,7 @@ import { PostViewRepository } from './repositories/postView.repository';
 import { PostVoteRepository } from './repositories/postVote.repository';
 import { PostService } from './services/post.service';
 import { PostTagService } from './services/postTag.service';
+import { ImageModule } from '../images/image.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { PostTagService } from './services/postTag.service';
     forwardRef(() => SettingModule),
     forwardRef(() => NotificationModule),
     FileModule,
+    ImageModule,
     CategoryModule,
   ],
   providers: [
