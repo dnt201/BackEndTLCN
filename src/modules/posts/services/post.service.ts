@@ -579,10 +579,15 @@ export class PostService {
     return listPosts;
   }
 
-  async getAllPostWithUser(userId: string, page: PostPage) {
+  async getAllPostWithUser(
+    userId: string,
+    page: PostPage,
+    ownerRequest = false,
+  ) {
     const listPosts = await this.postRepository.getAllPublicPostByUser(
       userId,
       page,
+      ownerRequest,
     );
     return listPosts;
   }

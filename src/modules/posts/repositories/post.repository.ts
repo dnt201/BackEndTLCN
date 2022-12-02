@@ -412,7 +412,11 @@ export class PostRepository extends Repository<Post> {
     }
   }
 
-  async getAllPublicPostByUser(userId: string, page: PostPage) {
+  async getAllPublicPostByUser(
+    userId: string,
+    page: PostPage,
+    ownerRequest = false,
+  ) {
     const takeQuery = page.size ?? 10;
     const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
 
@@ -422,10 +426,25 @@ export class PostRepository extends Repository<Post> {
     try {
       const listPostQuery = await this.createQueryBuilder('post')
         .where('post.isPublic = :isPublic', { isPublic: true })
+        .where('post.deleted = :deleted', { deleted: false })
         .leftJoin('post.postComments', 'PostComment')
         .leftJoin('PostComment.postReplies', 'PostReply')
         .leftJoin('post.owner', 'User')
-        .where('User.id = :userId', { userId: userId })
+        .andWhere(
+          new Brackets((qb) => {
+            qb.where('post.isPublic = :isPublic', { isPublic: true }).orWhere(
+              new Brackets((query) => {
+                query
+                  .where('post.isPublic = :isPrivate', { isPrivate: false })
+                  .andWhere('User.id = :userId', { userId: userId })
+                  .andWhere('true = :ownerRequest', {
+                    ownerRequest: ownerRequest,
+                  });
+              }),
+            );
+          }),
+        )
+        .andWhere('User.id = :userId', { userId: userId })
         .leftJoin('post.category', 'Category')
         .leftJoin('post.tags', 'PostTag')
         .leftJoin('post.postViews', 'PostView')
@@ -435,7 +454,8 @@ export class PostRepository extends Repository<Post> {
           'post.replyCount',
           'post.postComments.postReplies',
         )
-        .orderBy('post.vote', 'DESC')
+        .orderBy('post.dateUpdated', 'DESC')
+        .addOrderBy('post.vote', 'DESC')
         .take(takeQuery)
         .skip((skipQuery - 1) * takeQuery)
         .select([
@@ -452,9 +472,15 @@ export class PostRepository extends Repository<Post> {
         ConvertPostWithMoreInfo(data),
       );
 
-      const totalPost = await this.count({
-        where: { isPublic: true, owner: { id: userId } },
-      });
+      let totalPost = 0;
+      if (ownerRequest)
+        totalPost = await this.count({
+          where: { owner: { id: userId } },
+        });
+      else
+        totalPost = await this.count({
+          where: { isPublic: true, owner: { id: userId } },
+        });
 
       dataReturn.data = listPostWithData;
       dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);

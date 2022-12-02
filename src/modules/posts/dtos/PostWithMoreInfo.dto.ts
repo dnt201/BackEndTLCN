@@ -4,6 +4,7 @@ import { PostTag } from '../entities/postTag.entity';
 export class PostWithMoreInfo {
   id: string;
   title: string;
+  status: string;
   dateModified: Date;
   owner: {
     id: string;

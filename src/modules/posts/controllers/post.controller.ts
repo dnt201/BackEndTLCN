@@ -165,7 +165,7 @@ export class PostController {
     @Body() body,
   ) {
     const post = await this.postService.getPostById(postId);
-    if (!post) {
+    if (!post?.isPublic) {
       throw new BadRequestException(`Not found post with id ${postId}`);
     }
 
@@ -601,10 +601,16 @@ export class PostController {
     if (data.message === HeaderNotification.WRONG_AUTHORIZATION) {
       throw new UnauthorizedException();
     } else {
-      const listPost = await this.postService.getAllPostWithUser(userId, page);
-
+      let listPost = null;
       if (data.message === HeaderNotification.TRUE_AUTHORIZATION) {
-        const userId = data.result;
+        const userRequest = data.result;
+        if (String(userRequest) === userId)
+          listPost = await this.postService.getAllPostWithUser(
+            userId,
+            page,
+            true,
+          );
+        else listPost = await this.postService.getAllPostWithUser(userId, page);
         const listPostWithFollowInfo = await Promise.all(
           listPost.data.map(async (data) => {
             const isFollow = this.postService.getFollowPostById(
@@ -615,6 +621,8 @@ export class PostController {
           }),
         );
         listPost.data = listPostWithFollowInfo;
+      } else {
+        listPost = await this.postService.getAllPostWithUser(userId, page);
       }
 
       dataReturn.result = listPost;
@@ -723,8 +731,8 @@ export class PostController {
     @Param('id') postId: string,
   ) {
     const post = await this.postService.getPostById(postId);
-    if (!post) {
-      throw new BadRequestException(`Not found post with id ${postId}`);
+    if (!post.isPublic) {
+      throw new NotFoundException(`Not found post with id ${postId}`);
     }
 
     const followData = await this.postService.followPost({
