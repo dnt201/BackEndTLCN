@@ -14,7 +14,6 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { PostTag } from '../entities/postTag.entity';
 import { PostTagService } from '../services/postTag.service';
 import { PostTag_Permission as ListPermission } from '../permission/permission';
 import { PermissionGuard } from 'src/auth/guards/permission.guard';
@@ -24,6 +23,7 @@ import { PostTagPage } from '../dtos/posttagPage.dto';
 import { PagedData } from 'src/common/dto/PageData';
 import { ReturnResult } from 'src/common/dto/ReturnResult';
 import { FilesInterceptor } from 'src/modules/files/interceptors/file.interceptor';
+import { PostTagWithMoreInfo } from '../dtos/postTagWithMoreInfo';
 
 @Controller('post/post-tag')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -32,9 +32,8 @@ export class PostTagController {
 
   @Post()
   async getAllPostTag(@Body() page: PostTagPage, @Query() searchData) {
-    const dataReturn: ReturnResult<PagedData<PostTag>> = new ReturnResult<
-      PagedData<PostTag>
-    >();
+    const dataReturn: ReturnResult<PagedData<PostTagWithMoreInfo>> =
+      new ReturnResult<PagedData<PostTagWithMoreInfo>>();
 
     let dataSearch = '';
     if (searchData?.name == null) dataSearch = '';
@@ -143,9 +142,8 @@ export class PostTagController {
   @Post('hide')
   @UseGuards(PermissionGuard(ListPermission.GetHidePostTag))
   async getAllPostTagHide(@Body() page: PostTagPage, @Query() searchData) {
-    const dataReturn: ReturnResult<PagedData<PostTag>> = new ReturnResult<
-      PagedData<PostTag>
-    >();
+    const dataReturn: ReturnResult<PagedData<PostTagWithMoreInfo>> =
+      new ReturnResult<PagedData<PostTagWithMoreInfo>>();
 
     let dataSearch = '';
     if (searchData?.name == null) dataSearch = '';

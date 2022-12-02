@@ -1,7 +1,7 @@
+import { PostTagWithMoreInfo } from 'src/modules/posts/dtos/postTagWithMoreInfo';
 import { Post } from 'src/modules/posts/entities/post.entity';
 import { PostComment } from 'src/modules/posts/entities/postComment.entity';
 import { PostReply } from 'src/modules/posts/entities/postReply.entity';
-import { PostTag } from 'src/modules/posts/entities/postTag.entity';
 import { User } from 'src/modules/users/entities/user.entity';
 
 export class UserWithMoreInfo extends User {
@@ -41,7 +41,7 @@ export function getUserWithImageLink(user: UserWithMoreInfo | User) {
   return { ...data, posts: listPost };
 }
 
-export function getPostTagWithThumbnailLink(postTag: PostTag) {
+export function getPostTagWithThumbnailLink(postTag: PostTagWithMoreInfo) {
   return {
     ...postTag,
     thumbnailId: undefined,
@@ -49,6 +49,9 @@ export function getPostTagWithThumbnailLink(postTag: PostTag) {
     dateDeleted: undefined,
     thumbnailLink: postTag.thumbnailId
       ? `http://localhost:3000/file/${postTag.thumbnailId}`
+      : null,
+    tinyLink: postTag.tinyId
+      ? `http://localhost:3000/file/${postTag.tinyId}`
       : null,
   };
 }
