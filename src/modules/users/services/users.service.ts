@@ -268,7 +268,7 @@ export class UsersService {
   private async verifyPassword(password: string, hashedPassword: string) {
     const isMatchingPassword = await bcrypt.compare(password, hashedPassword);
     if (!isMatchingPassword) {
-      throw new BadRequestException('Wrong password');
+      throw new BadRequestException('Wrong old password');
     }
   }
 }
