@@ -99,6 +99,10 @@ export class PostService {
     const viewPost = await this.postViewRepository.getPostViewById(
       viewPostData,
     );
+    const userFollowPost = await this.folowPostRepository.getFollowPostById(
+      viewPostData.userId,
+      viewPostData.postId,
+    );
 
     if (post.owner.id !== viewPostData.userId) {
       if (!viewPost) {
@@ -114,7 +118,9 @@ export class PostService {
       }
     }
 
-    return this.getPostDetailById(viewPostData);
+    const postDetail = await this.getPostDetailById(viewPostData);
+    if (userFollowPost) postDetail.isFollow = true;
+    return postDetail;
   }
 
   async votePost(votePostData: VotePostDTO) {
