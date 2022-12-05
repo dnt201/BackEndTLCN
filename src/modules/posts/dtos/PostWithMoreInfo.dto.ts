@@ -5,6 +5,7 @@ export class PostWithMoreInfo {
   id: string;
   title: string;
   status: string;
+  content: string;
   dateModified: Date;
   owner: {
     id: string;
