@@ -598,6 +598,14 @@ export class PostService {
     return listPosts;
   }
 
+  async getAllPostNotApproveWithUserId(userId: string, page: PostPage) {
+    const listPosts = await this.postRepository.getAllPostNotApproveWithUserId(
+      userId,
+      page,
+    );
+    return listPosts;
+  }
+
   async getAllPostVoteWithUserId(userId: string, page: PostPage) {
     const listPosts = await this.postVoteRepository.getAllPostVoteWithUserId(
       userId,

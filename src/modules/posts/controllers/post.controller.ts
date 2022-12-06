@@ -608,7 +608,7 @@ export class PostController {
           listPost = await this.postService.getAllPostWithUser(
             userId,
             page,
-            true,
+            false,
           );
         else listPost = await this.postService.getAllPostWithUser(userId, page);
         const listPostWithFollowInfo = await Promise.all(
@@ -629,6 +629,25 @@ export class PostController {
       dataReturn.message = null;
       return dataReturn;
     }
+  }
+
+  @Post('/all-not-approve')
+  @UseGuards(JwtAuthenticationGuard)
+  async getAllPostNotApprove(
+    @Req() request: RequestWithUser,
+    @Body() page: PostPage,
+  ) {
+    const userId = request.user.id;
+    const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
+      new ReturnResult<PagedData<PostWithMoreInfo>>();
+    const listPost = await this.postService.getAllPostNotApproveWithUserId(
+      userId,
+      page,
+    );
+
+    dataReturn.result = listPost;
+    dataReturn.message = null;
+    return dataReturn;
   }
 
   @Post('all-post-vote')
