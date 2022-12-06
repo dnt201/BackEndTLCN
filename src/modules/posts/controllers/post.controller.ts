@@ -9,6 +9,7 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Delete,
   Get,
   Headers,
   NotFoundException,
@@ -784,6 +785,27 @@ export class PostController {
       });
       return listPost;
     }
+  }
+
+  @Delete('/:id')
+  @UseGuards(JwtAuthenticationGuard)
+  async deletePost(
+    @Req() request: RequestWithUser,
+    @Param('id') postId: string,
+  ) {
+    const user = request.user;
+    const post = await this.postService.getPostById(postId);
+
+    if (!post) {
+      throw new NotFoundException(`Not found post with id: ${postId}`);
+    } else if (post.owner.id === user.id || user.role.displayName === 'Admin') {
+      return await this.postService.deletePost(postId);
+    } else {
+      throw new BadRequestException(
+        `You cannot delete post with id: ${postId}`,
+      );
+    }
+    console.log(post);
   }
 
   private async isExistPost(postId: string): Promise<boolean> {

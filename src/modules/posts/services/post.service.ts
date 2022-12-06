@@ -104,6 +104,11 @@ export class PostService {
       viewPostData.postId,
     );
 
+    if (!post) {
+      throw new NotFoundException(
+        `Not found post with id: ${viewPostData.postId}`,
+      );
+    }
     if (post.owner.id !== viewPostData.userId) {
       if (!viewPost) {
         if (viewPostData.userId) {
@@ -738,6 +743,10 @@ export class PostService {
     } else {
       await this.addPostCommentImage(replyId, fileData);
     }
+  }
+
+  async deletePost(postId: string) {
+    return await this.postRepository.deletePost(postId);
   }
 
   private async addCommentTag(userTag: string, commentId: string) {

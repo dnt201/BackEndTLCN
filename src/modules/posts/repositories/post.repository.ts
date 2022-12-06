@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -583,6 +584,20 @@ export class PostRepository extends Repository<Post> {
       return PostData ? ConvertPostWithMoreInfo(PostData) : PostData;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async deletePost(postId: string) {
+    try {
+      const deletedResponse = await this.delete(postId);
+      if (!deletedResponse.affected) {
+        throw new NotFoundException(`Post with id: ${postId} does not exist`);
+      }
+      return true;
+    } catch (error) {
+      if (error.code === HttpStatus.NOT_FOUND)
+        throw new NotFoundException(error.message);
+      else throw new InternalServerErrorException(error.message);
     }
   }
 }
