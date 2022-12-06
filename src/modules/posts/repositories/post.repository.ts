@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -490,6 +491,61 @@ export class PostRepository extends Repository<Post> {
     }
   }
 
+  async getAllPostNotApproveWithUserId(userId: string, page: PostPage) {
+    const takeQuery = page?.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<PostWithMoreInfo> =
+      new PagedData<PostWithMoreInfo>();
+
+    try {
+      const listPostQuery = await this.createQueryBuilder('post')
+        .where('post.isPublic = :isPublic', { isPublic: true })
+        .where('post.deleted = :deleted', { deleted: false })
+        .leftJoin('post.postComments', 'PostComment')
+        .leftJoin('PostComment.postReplies', 'PostReply')
+        .leftJoin('post.owner', 'User')
+        .andWhere('post.isPublic = :isPublic', { isPublic: false })
+        .andWhere('User.id = :userId', { userId: userId })
+        .leftJoin('post.category', 'Category')
+        .leftJoin('post.tags', 'PostTag')
+        .leftJoin('post.postViews', 'PostView')
+        .loadRelationCountAndMap('post.views', 'post.postViews')
+        .loadRelationCountAndMap('post.commentCount', 'post.postComments')
+        .loadRelationCountAndMap(
+          'post.replyCount',
+          'post.postComments.postReplies',
+        )
+        .orderBy('post.dateUpdated', 'DESC')
+        .addOrderBy('post.vote', 'DESC')
+        .take(takeQuery)
+        .skip((skipQuery - 1) * takeQuery)
+        .select([
+          'post',
+          'PostComment',
+          'PostReply',
+          'User',
+          'Category',
+          'PostTag',
+        ])
+        .getMany();
+
+      const listPostWithData = listPostQuery.map((data) =>
+        ConvertPostWithMoreInfo(data),
+      );
+
+      const totalPost = await this.count({
+        where: { isPublic: false, owner: { id: userId } },
+      });
+
+      dataReturn.data = listPostWithData;
+      dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
+      return dataReturn;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
   async getPostDetailById(postId: string, userId: string) {
     try {
       let PostData;
@@ -528,6 +584,20 @@ export class PostRepository extends Repository<Post> {
       return PostData ? ConvertPostWithMoreInfo(PostData) : PostData;
     } catch (error) {
       throw new InternalServerErrorException(error.message);
+    }
+  }
+
+  async deletePost(postId: string) {
+    try {
+      const deletedResponse = await this.delete(postId);
+      if (!deletedResponse.affected) {
+        throw new NotFoundException(`Post with id: ${postId} does not exist`);
+      }
+      return true;
+    } catch (error) {
+      if (error.code === HttpStatus.NOT_FOUND)
+        throw new NotFoundException(error.message);
+      else throw new InternalServerErrorException(error.message);
     }
   }
 }

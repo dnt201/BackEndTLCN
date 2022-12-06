@@ -9,6 +9,7 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Delete,
   Get,
   Headers,
   NotFoundException,
@@ -608,7 +609,7 @@ export class PostController {
           listPost = await this.postService.getAllPostWithUser(
             userId,
             page,
-            true,
+            false,
           );
         else listPost = await this.postService.getAllPostWithUser(userId, page);
         const listPostWithFollowInfo = await Promise.all(
@@ -629,6 +630,25 @@ export class PostController {
       dataReturn.message = null;
       return dataReturn;
     }
+  }
+
+  @Post('/all-not-approve')
+  @UseGuards(JwtAuthenticationGuard)
+  async getAllPostNotApprove(
+    @Req() request: RequestWithUser,
+    @Body() page: PostPage,
+  ) {
+    const userId = request.user.id;
+    const dataReturn: ReturnResult<PagedData<PostWithMoreInfo>> =
+      new ReturnResult<PagedData<PostWithMoreInfo>>();
+    const listPost = await this.postService.getAllPostNotApproveWithUserId(
+      userId,
+      page,
+    );
+
+    dataReturn.result = listPost;
+    dataReturn.message = null;
+    return dataReturn;
   }
 
   @Post('all-post-vote')
@@ -765,6 +785,27 @@ export class PostController {
       });
       return listPost;
     }
+  }
+
+  @Delete('/:id')
+  @UseGuards(JwtAuthenticationGuard)
+  async deletePost(
+    @Req() request: RequestWithUser,
+    @Param('id') postId: string,
+  ) {
+    const user = request.user;
+    const post = await this.postService.getPostById(postId);
+
+    if (!post) {
+      throw new NotFoundException(`Not found post with id: ${postId}`);
+    } else if (post.owner.id === user.id || user.role.displayName === 'Admin') {
+      return await this.postService.deletePost(postId);
+    } else {
+      throw new BadRequestException(
+        `You cannot delete post with id: ${postId}`,
+      );
+    }
+    console.log(post);
   }
 
   private async isExistPost(postId: string): Promise<boolean> {
