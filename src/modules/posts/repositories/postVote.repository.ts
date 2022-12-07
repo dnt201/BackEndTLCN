@@ -30,6 +30,7 @@ export class PostVoteRepository extends Repository<PostVote> {
 
   async getVotePostById(userId: string, postId: string) {
     try {
+      if (!userId) return null;
       return await this.findOne({
         where: [{ userId: userId, postId: postId }],
       });
