@@ -103,6 +103,10 @@ export class PostService {
       viewPostData.userId,
       viewPostData.postId,
     );
+    const userVotePost = await this.postVoteRepository.getVotePostById(
+      viewPostData.userId,
+      viewPostData.postId,
+    );
 
     if (!post) {
       throw new NotFoundException(
@@ -125,6 +129,12 @@ export class PostService {
 
     const postDetail = await this.getPostDetailById(viewPostData);
     if (userFollowPost) postDetail.isFollow = true;
+    if (userVotePost) {
+      return {
+        ...postDetail,
+        voteData: userVotePost.type === false ? 'DownVote' : 'Upvote',
+      };
+    }
     return postDetail;
   }
 
