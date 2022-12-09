@@ -93,7 +93,7 @@ export class FollowPostRepository extends Repository<UserFollowPost> {
         ConvertPostWithMoreInfo(data),
       );
 
-      const totalPost = await this.count();
+      const totalPost = await this.count({ where: { userId: userId } });
 
       dataReturn.data = listPostWithData;
       dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
