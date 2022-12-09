@@ -76,7 +76,7 @@ export class PostTagService {
     const imageInfo = await this.imageService.getFullInfoImage(
       data.thumbnailId,
     );
-    return getPostTagWithThumbnailLink({ ...data, tinyId: imageInfo.tinyId });
+    return getPostTagWithThumbnailLink({ ...data, tinyId: imageInfo?.tinyId });
   }
 
   async getTopPostTag() {

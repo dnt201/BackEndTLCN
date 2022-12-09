@@ -6,8 +6,8 @@ export class Image {
   imageId: string;
 
   @Column()
-  public tinyId: string;
+  public tinyId?: string;
 
   @Column()
-  public fullId: string;
+  public fullId?: string;
 }
