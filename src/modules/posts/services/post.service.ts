@@ -38,6 +38,7 @@ import { PostCommentVoteRepository } from '../repositories/postCommentVote.repos
 import { NotificationService } from 'src/modules/notifications/service/notification.service';
 import { NotificationStatus } from 'src/common/constants/notificationStatus.dto';
 import { NotificationReference } from 'src/common/constants/notificationRef.constant';
+import { UserAvatar } from 'src/common/dto/AvatarUser';
 
 @Injectable()
 export class PostService {
@@ -182,15 +183,26 @@ export class PostService {
       sendNotification = true;
     }
 
+    const shortInfoUserSend: UserAvatar = {
+      imageLink: user.avatarId
+        ? `http://localhost:3000/file/${user.avatarId}`
+        : null,
+      username: user.username,
+      id: user.id,
+    };
+
     if (sendNotification) {
-      await this.notificationService.createNotification({
-        body: `${user.username} voted to yout post`,
-        type: NoticationType.PostVote,
-        refType: NotificationReference.Post,
-        refId: votePostData.postId,
-        userId: post.owner.id,
-        status: NotificationStatus.Sent,
-      });
+      await this.notificationService.createNotification(
+        {
+          body: `${user.username} voted to yout post`,
+          type: NoticationType.PostVote,
+          refType: NotificationReference.Post,
+          refId: votePostData.postId,
+          userId: post.owner.id,
+          status: NotificationStatus.Sent,
+        },
+        shortInfoUserSend,
+      );
     } else {
       await this.notificationService.removeNotification({
         body: `${user.username} voted to yout post`,
@@ -224,32 +236,46 @@ export class PostService {
     });
     await this.postCommentRepository.save(postComment);
 
+    const shortInfoUserSend: UserAvatar = {
+      imageLink: user.avatarId
+        ? `http://localhost:3000/file/${user.avatarId}`
+        : null,
+      username: user.username,
+      id: user.id,
+    };
+
     Promise.all(
       createData.userTag.map(async (userTag) => {
         await this.addCommentTag(userTag, postComment.commentId);
 
-        await this.notificationService.createNotification({
-          body: `${user.username} metioned you in a comment`,
-          type: NoticationType.PostComment,
-          refType: NotificationReference.Comment,
-          refId: postComment.commentId,
-          userId: userTag,
-          status: NotificationStatus.Sent,
-          extendData: JSON.stringify({
-            post: createData.postId,
-          }),
-        });
+        await this.notificationService.createNotification(
+          {
+            body: `${user.username} metioned you in a comment`,
+            type: NoticationType.PostComment,
+            refType: NotificationReference.Comment,
+            refId: postComment.commentId,
+            userId: userTag,
+            status: NotificationStatus.Sent,
+            extendData: JSON.stringify({
+              post: createData.postId,
+            }),
+          },
+          shortInfoUserSend,
+        );
       }),
     );
 
-    await this.notificationService.createNotification({
-      body: `${user.username} comment in your post`,
-      type: NoticationType.PostComment,
-      refType: NotificationReference.Post,
-      refId: postComment.postId,
-      userId: post.owner.id,
-      status: NotificationStatus.Sent,
-    });
+    await this.notificationService.createNotification(
+      {
+        body: `${user.username} comment in your post`,
+        type: NoticationType.PostComment,
+        refType: NotificationReference.Post,
+        refId: postComment.postId,
+        userId: post.owner.id,
+        status: NotificationStatus.Sent,
+      },
+      shortInfoUserSend,
+    );
 
     return postComment;
   }
@@ -291,21 +317,32 @@ export class PostService {
       }),
     );
 
+    const shortInfoUserSend: UserAvatar = {
+      imageLink: user.avatarId
+        ? `http://localhost:3000/file/${user.avatarId}`
+        : null,
+      username: user.username,
+      id: user.id,
+    };
+
     Promise.all(
       userAddNewInTag.map(async (userTag) => {
         await this.addCommentTag(userTag, commentId);
 
-        await this.notificationService.createNotification({
-          body: `${user.username} metioned you in a comment`,
-          type: NoticationType.PostComment,
-          refType: NotificationReference.Comment,
-          refId: postComment.commentId,
-          userId: userTag,
-          status: NotificationStatus.Sent,
-          extendData: JSON.stringify({
-            post: updatePostCommentData.postId,
-          }),
-        });
+        await this.notificationService.createNotification(
+          {
+            body: `${user.username} metioned you in a comment`,
+            type: NoticationType.PostComment,
+            refType: NotificationReference.Comment,
+            refId: postComment.commentId,
+            userId: userTag,
+            status: NotificationStatus.Sent,
+            extendData: JSON.stringify({
+              post: updatePostCommentData.postId,
+            }),
+          },
+          shortInfoUserSend,
+        );
       }),
     );
 
@@ -388,15 +425,26 @@ export class PostService {
       sendNotification = true;
     }
 
+    const shortInfoUserSend: UserAvatar = {
+      imageLink: user.avatarId
+        ? `http://localhost:3000/file/${user.avatarId}`
+        : null,
+      username: user.username,
+      id: user.id,
+    };
+
     if (sendNotification) {
-      await this.notificationService.createNotification({
-        body: `${user.username} voted to yout comment`,
-        type: NoticationType.PostCommentVote,
-        refType: NotificationReference.Comment,
-        refId: voteCommentPostData.postCommentId,
-        userId: voteCommentPostData.userId,
-        status: NotificationStatus.Sent,
-      });
+      await this.notificationService.createNotification(
+        {
+          body: `${user.username} voted to yout comment`,
+          type: NoticationType.PostCommentVote,
+          refType: NotificationReference.Comment,
+          refId: voteCommentPostData.postCommentId,
+          userId: voteCommentPostData.userId,
+          status: NotificationStatus.Sent,
+        },
+        shortInfoUserSend,
+      );
     } else {
       await this.notificationService.removeNotification({
         body: `${user.username} voted to yout comment`,
@@ -431,37 +479,51 @@ export class PostService {
     });
     await this.postReplyRepository.save(postReply);
 
+    const shortInfoUserSend: UserAvatar = {
+      imageLink: user.avatarId
+        ? `http://localhost:3000/file/${user.avatarId}`
+        : null,
+      username: user.username,
+      id: user.id,
+    };
+
     Promise.all(
       createData.userTag.map(async (userTag) => {
         await this.addReplyTag(userTag, postReply.replyId);
 
-        await this.notificationService.createNotification({
-          body: `${user.username} metioned you in a comment`,
-          type: NoticationType.PostReply,
-          refType: NotificationReference.Reply,
-          refId: postReply.replyId,
-          userId: userTag,
-          status: NotificationStatus.Sent,
-          extendData: JSON.stringify({
-            post: comment.postId,
-            comment: postReply.commentId,
-          }),
-        });
+        await this.notificationService.createNotification(
+          {
+            body: `${user.username} metioned you in a comment`,
+            type: NoticationType.PostReply,
+            refType: NotificationReference.Reply,
+            refId: postReply.replyId,
+            userId: userTag,
+            status: NotificationStatus.Sent,
+            extendData: JSON.stringify({
+              post: comment.postId,
+              comment: postReply.commentId,
+            }),
+          },
+          shortInfoUserSend,
+        );
       }),
     );
 
-    await this.notificationService.createNotification({
-      body: `${user.username} reply you in a comment`,
-      type: NoticationType.PostReply,
-      refType: NotificationReference.Reply,
-      refId: postReply.replyId,
-      userId: createData.userCommentId,
-      status: NotificationStatus.Sent,
-      extendData: JSON.stringify({
-        post: comment.postId,
-        comment: postReply.commentId,
-      }),
-    });
+    await this.notificationService.createNotification(
+      {
+        body: `${user.username} reply you in a comment`,
+        type: NoticationType.PostReply,
+        refType: NotificationReference.Reply,
+        refId: postReply.replyId,
+        userId: createData.userCommentId,
+        status: NotificationStatus.Sent,
+        extendData: JSON.stringify({
+          post: comment.postId,
+          comment: postReply.commentId,
+        }),
+      },
+      shortInfoUserSend,
+    );
     return postReply;
   }
 
@@ -493,22 +555,33 @@ export class PostService {
       }),
     );
 
+    const shortInfoUserSend: UserAvatar = {
+      imageLink: user.avatarId
+        ? `http://localhost:3000/file/${user.avatarId}`
+        : null,
+      username: user.username,
+      id: user.id,
+    };
+
     Promise.all(
       userAddNewInTag.map(async (userTag) => {
         await this.addReplyTag(userTag, replyId);
 
-        await this.notificationService.createNotification({
-          body: `${user.username} metioned you in a comment`,
-          type: NoticationType.PostReply,
-          refType: NotificationReference.Reply,
-          refId: postReply.replyId,
-          userId: userTag,
-          status: NotificationStatus.Sent,
-          extendData: JSON.stringify({
-            post: comment.postId,
-            comment: postReply.commentId,
-          }),
-        });
+        await this.notificationService.createNotification(
+          {
+            body: `${user.username} metioned you in a comment`,
+            type: NoticationType.PostReply,
+            refType: NotificationReference.Reply,
+            refId: postReply.replyId,
+            userId: userTag,
+            status: NotificationStatus.Sent,
+            extendData: JSON.stringify({
+              post: comment.postId,
+              comment: postReply.commentId,
+            }),
+          },
+          shortInfoUserSend,
+        );
       }),
     );
 
