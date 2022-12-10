@@ -125,8 +125,8 @@ export class UsersService {
     return this.getUserById(user.id);
   }
 
-  async getAllUsers(page: UserPage) {
-    const users = await this.userRepository.getAllUser(page);
+  async getAllUsers(page: UserPage, dataSearch: string) {
+    const users = await this.userRepository.getAllUser(page, dataSearch);
     return users;
   }
 
@@ -174,6 +174,10 @@ export class UsersService {
       ...user,
       isFollowing: isFollow ? true : false,
     };
+  }
+
+  async getUserFollowInfo(userId: string, myId: string) {
+    return await this.userFollowRepository.getFollowUserData(userId, myId);
   }
 
   async getUserByToken(token: string): Promise<User> {

@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { Page } from 'src/common/dto/Page';
 import { PagedData } from 'src/common/dto/PageData';
 import { ConvertOrderQuery } from 'src/utils/convertOrderQuery';
-import { DataSource, ILike, In, Like, Not, Repository } from 'typeorm';
+import { DataSource, ILike, In, IsNull, Like, Not, Repository } from 'typeorm';
 import { CreateUserDTO } from '../dtos/createUser.dto';
 import { UpdateUserDTO } from '../dtos/updateUser.dto';
 import { UserPage } from '../dtos/userPage.dto';
@@ -126,7 +126,7 @@ export class UserRepository extends Repository<User> {
     }
   }
 
-  async getAllUser(page: UserPage) {
+  async getAllUser(page: UserPage, dataSearch: string) {
     const orderQuery =
       page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);
 
@@ -137,12 +137,21 @@ export class UserRepository extends Repository<User> {
 
     try {
       const listUser = await this.find({
+        where: {
+          username: ILike(`%${dataSearch}%`),
+          token: IsNull(),
+        },
         order: orderQuery,
         take: takeQuery,
         skip: (skipQuery - 1) * takeQuery,
       });
 
-      const totalUser = await this.count();
+      const totalUser = await this.count({
+        where: {
+          username: ILike(`%${dataSearch}%`),
+          token: IsNull(),
+        },
+      });
 
       dataReturn.data = listUser;
       dataReturn.page = new Page(
