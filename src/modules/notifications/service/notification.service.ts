@@ -1,3 +1,4 @@
+import { UserAvatar } from './../../../common/dto/AvatarUser';
 import {
   forwardRef,
   Inject,
@@ -61,7 +62,7 @@ export class NotificationService {
     }
   }
 
-  async createNotification(notificationDTO: NotificationDTO) {
+  async createNotification(notificationDTO: NotificationDTO, user: UserAvatar) {
     const maxAttempt = await this.settingService.getSettingValueByKeyAndGroup(
       'MAX_ATTEMPTS',
       'NOTIFICATION',
@@ -81,7 +82,7 @@ export class NotificationService {
 
     await this.sendNotification(
       notification.type,
-      notification,
+      { ...notification, userSend: user },
       notification.userId,
     );
   }
