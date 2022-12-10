@@ -360,6 +360,10 @@ export class PostService {
     return await this.getCommentById(commentId);
   }
 
+  async deleteCommentPost(commentId: string) {
+    return await this.postCommentRepository.deleteComment(commentId);
+  }
+
   async getCommentById(commentId: string) {
     const comment = await this.postCommentRepository.getCommentById(commentId);
     return comment ? getCommentWithImageLink(comment) : null;
@@ -592,6 +596,10 @@ export class PostService {
       content: updatePostReplyData.replyContent,
     });
     await this.postReplyRepository.save(postReply);
+  }
+
+  async deleteReplyPost(commentId: string) {
+    return await this.postReplyRepository.deleteReply(commentId);
   }
 
   async getReplyById(replyId: string) {

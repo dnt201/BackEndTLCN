@@ -37,6 +37,9 @@ export class PostReply implements IModified {
   @ManyToOne(
     () => PostComment,
     (postComment: PostComment) => postComment.postReplies,
+    {
+      onDelete: 'CASCADE',
+    },
   )
   @JoinColumn({ name: 'commentId' })
   public postComment: PostComment;

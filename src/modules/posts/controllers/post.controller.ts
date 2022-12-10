@@ -292,6 +292,25 @@ export class PostController {
     return await this.postService.getCommentById(commentId);
   }
 
+  @Delete('/comment/:id/delete')
+  @UseGuards(JwtAuthenticationGuard)
+  async deletePostComment(
+    @Req() request: RequestWithUser,
+    @Param('id') postCommentId: string,
+  ) {
+    const postComment = await this.postService.getCommentById(postCommentId);
+    if (!postComment) {
+      throw new BadRequestException(
+        `Not found comment with id ${postCommentId}`,
+      );
+    }
+    if (postComment.senderId !== request.user.id) {
+      throw new BadRequestException(`You can not delete this comment!`);
+    }
+
+    return await this.postService.deleteCommentPost(postCommentId);
+  }
+
   @Post('comment/:id/vote')
   @UseGuards(JwtAuthenticationGuard)
   async votePostComment(
@@ -429,6 +448,23 @@ export class PostController {
     }
 
     return await this.postService.getReplyById(replyId);
+  }
+
+  @Delete('/reply/:id/delete')
+  @UseGuards(JwtAuthenticationGuard)
+  async deletePostReply(
+    @Req() request: RequestWithUser,
+    @Param('id') postReplyId: string,
+  ) {
+    const postReply = await this.postService.getReplyById(postReplyId);
+    if (!postReply) {
+      throw new BadRequestException(`Not found reply with id ${postReplyId}`);
+    }
+    if (postReply.senderId !== request.user.id) {
+      throw new BadRequestException(`You can not delete this reply!`);
+    }
+
+    return await this.postService.deleteReplyPost(postReplyId);
   }
 
   @Post('/all')
@@ -763,7 +799,7 @@ export class PostController {
     return followData;
   }
 
-  @Get('/:id/get-all-comment')
+  @Post('/:id/get-all-comment')
   async getAllComment(@Param('id') postId: string, @Body() page: CommentPage) {
     const post = await this.postService.getPostById(postId);
     if (!post) {
