@@ -1,3 +1,4 @@
+import { UsersModule } from 'src/modules/users/users.module';
 import { NotificationController } from './controllers/notification.controller';
 import { NotificationRepository } from './repository/notification.repository';
 import { SettingModule } from './../settings/setting.module';
@@ -12,9 +13,10 @@ import { Notification } from './entity/notification.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Notification]),
-    forwardRef(() => AuthModule),
     ConnectionModule,
     SettingModule,
+    forwardRef(() => UsersModule),
+    forwardRef(() => AuthModule),
   ],
   controllers: [NotificationController],
   providers: [NotificationGateway, NotificationService, NotificationRepository],

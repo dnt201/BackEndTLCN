@@ -8,4 +8,5 @@ export class NotificationDTO {
   refType?: string;
   refId?: string;
   extendData?: string;
+  userSend?: string;
 }
