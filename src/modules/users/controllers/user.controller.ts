@@ -27,7 +27,10 @@ import { UpdatePasswordDTO } from '../dtos/updatePassword.dto';
 import { UserFollowUserDTO } from '../dtos/userFollowUser.dto';
 import { FilesInterceptor } from 'src/modules/files/interceptors/file.interceptor';
 import RequestWithUser from 'src/auth/interfaces/requestWithUser.interface';
-import { getUserWithImageLink } from 'src/utils/getImageLinkUrl';
+import {
+  getUserWithImageLink,
+  getUserWithMoreinfo,
+} from 'src/utils/getImageLinkUrl';
 import { UserPage } from '../dtos/userPage.dto';
 import { ReturnResult } from 'src/common/dto/ReturnResult';
 import { PagedData } from 'src/common/dto/PageData';
@@ -40,23 +43,77 @@ import { HeaderNotification } from 'src/common/constants/HeaderNotification.cons
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  // @Post('/all')
+  // // @UseGuards(RoleGuard(process.env.ADMIN_ROLE))
+  // @UseGuards(PermissionGuard(ListPermission.ViewAllUser))
+  // async getAllUsers(@Body() page: UserPage) {
+  //   const dataReturn: ReturnResult<PagedData<User>> = new ReturnResult<
+  //     PagedData<User>
+  //   >();
+
+  //   const listUser = await this.usersService.getAllUsers(page);
+  //   listUser.data = listUser.data.map((user) => {
+  //     return getUserWithImageLink(user);
+  //   });
+
+  //   dataReturn.result = listUser;
+  //   dataReturn.message = null;
+
+  //   return dataReturn;
+  // }
   @Post('/all')
-  // @UseGuards(RoleGuard(process.env.ADMIN_ROLE))
-  @UseGuards(PermissionGuard(ListPermission.ViewAllUser))
-  async getAllUsers(@Body() page: UserPage) {
+  async getAllUsers(
+    @Headers() headers,
+    @Body() page: UserPage,
+    @Query() searchData,
+  ) {
     const dataReturn: ReturnResult<PagedData<User>> = new ReturnResult<
       PagedData<User>
     >();
+    const data = getTypeHeader(headers);
+    let dataSearch = '';
+    if (searchData['name'] && searchData['name'].length > 0)
+      dataSearch = searchData['name'];
 
-    const listUser = await this.usersService.getAllUsers(page);
-    listUser.data = listUser.data.map((user) => {
-      return getUserWithImageLink(user);
-    });
+    if (data.message === HeaderNotification.WRONG_AUTHORIZATION) {
+      throw new UnauthorizedException();
+    } else {
+      const listUser = await this.usersService.getAllUsers(page, dataSearch);
+      listUser.data = listUser.data.map((data) => {
+        return { ...getUserWithMoreinfo(data), isFollow: false };
+      });
 
-    dataReturn.result = listUser;
-    dataReturn.message = null;
+      if (data.message === HeaderNotification.TRUE_AUTHORIZATION) {
+        const userId = data.result;
+        const listUserWithFollowInfo = await Promise.all(
+          listUser.data.map(async (data) => {
+            const isFollow = await this.usersService.getUserFollowInfo(
+              data.id,
+              String(userId),
+            );
+            return {
+              ...getUserWithMoreinfo(data),
+              isFollow: isFollow ? true : false,
+            };
+          }),
+        );
+        listUser.data = listUserWithFollowInfo;
+        // const listPostWithFollowInfo = await Promise.all(
+        // listPost.data.map(async (data) => {
+        //   const isFollow = await this.postService.getFollowPostById(
+        //     String(userId),
+        //     data.id,
+        //   );
+        //   return { ...data, isFollow: isFollow ? true : false };
+        // }),
+        // );
+        // listPost.data = listPostWithFollowInfo;
+      }
 
-    return dataReturn;
+      dataReturn.result = listUser;
+      dataReturn.message = null;
+      return dataReturn;
+    }
   }
 
   @Get('/all-for-tag')
