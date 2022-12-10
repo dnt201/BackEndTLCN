@@ -77,6 +77,7 @@ export class NotificationService {
         ...notificationDTO,
         maxAttempt: Number(maxAttempt),
         timeOut: Number(timeOut),
+        userSend: user.id,
       });
     await this.notificationRepository.save(notification);
 
