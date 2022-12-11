@@ -39,6 +39,7 @@ import { NotificationService } from 'src/modules/notifications/service/notificat
 import { NotificationStatus } from 'src/common/constants/notificationStatus.dto';
 import { NotificationReference } from 'src/common/constants/notificationRef.constant';
 import { UserAvatar } from 'src/common/dto/AvatarUser';
+import { ReplyPage } from '../dtos/replyPage.dto';
 
 @Injectable()
 export class PostService {
@@ -737,6 +738,15 @@ export class PostService {
   async getAllCommentByPostId(postId: string, page: CommentPage) {
     const listComment = await this.postCommentRepository.getAllCommentByPostId(
       postId,
+      page,
+    );
+
+    return listComment;
+  }
+
+  async getAllReplyByCommentId(commentId: string, page: ReplyPage) {
+    const listComment = await this.postReplyRepository.getAllReplyByCommentId(
+      commentId,
       page,
     );
 

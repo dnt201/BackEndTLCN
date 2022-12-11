@@ -79,8 +79,8 @@ export class PostCommentRepository extends Repository<PostComment> {
           'PostComment.postReplies',
           'countReply',
         )
-
-        .orderBy('PostComment.dateModified', 'DESC')
+        .orderBy('PostComment.vote', 'DESC')
+        .addOrderBy('PostComment.dateModified', 'DESC')
         .take(takeQuery)
         .skip((skipQuery - 1) * takeQuery)
         .select([
