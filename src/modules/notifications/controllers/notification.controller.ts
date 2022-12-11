@@ -17,7 +17,7 @@ import { NotificationService } from '../service/notification.service';
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
-  @Get()
+  @Post()
   @UseGuards(JwtAuthenticationGuard)
   async getNotifications(
     @Req() request: RequestWithUser,
