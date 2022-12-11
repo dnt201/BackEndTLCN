@@ -51,6 +51,7 @@ import {
   UpdatePostReplyDTO,
   UpdatePostReplyInput,
 } from '../dtos/updatePostReply.dto';
+import { ReplyPage } from '../dtos/replyPage.dto';
 
 @Controller('post')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -807,6 +808,16 @@ export class PostController {
     }
 
     return await this.postService.getAllCommentByPostId(postId, page);
+  }
+
+  @Post('comment/:id/get-all-reply')
+  async getAllReply(@Param('id') commentId: string, @Body() page: ReplyPage) {
+    const post = await this.postService.getCommentById(commentId);
+    if (!post) {
+      throw new BadRequestException(`Not found post with id ${commentId}`);
+    }
+
+    return await this.postService.getAllReplyByCommentId(commentId, page);
   }
 
   @Get('/:id')
