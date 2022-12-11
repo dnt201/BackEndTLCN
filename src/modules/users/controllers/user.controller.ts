@@ -92,7 +92,7 @@ export class UsersController {
               String(userId),
             );
             return {
-              ...getUserWithMoreinfo(data),
+              ...data,
               isFollow: isFollow ? true : false,
             };
           }),
