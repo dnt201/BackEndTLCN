@@ -72,6 +72,8 @@ export class NotificationService {
       'NOTIFICATION',
     );
 
+    if (notificationDTO.userId === user.id) return;
+
     const notification =
       await this.notificationRepository.createNewNotification({
         ...notificationDTO,
