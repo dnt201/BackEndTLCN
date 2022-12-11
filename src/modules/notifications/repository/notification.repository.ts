@@ -26,7 +26,7 @@ export class NotificationRepository extends Repository<Notification> {
   async createNewNotification(notificationDTO: NotificationDTO) {
     try {
       const userSend = await this.userService.getUserById(
-        notificationDTO.userId,
+        notificationDTO.userSend,
       );
       const notification = await this.create({ ...notificationDTO, userSend });
       return notification;
@@ -82,7 +82,6 @@ export class NotificationRepository extends Repository<Notification> {
           userSend: userShortData,
           deleted: undefined,
           dateDeleted: undefined,
-          dateCreated: undefined,
         };
       });
       dataReturn.page = new Page(takeQuery, skipQuery, totalNotification, []);
