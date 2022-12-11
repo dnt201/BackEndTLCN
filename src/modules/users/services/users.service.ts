@@ -177,7 +177,7 @@ export class UsersService {
   }
 
   async getUserFollowInfo(userId: string, myId: string) {
-    return await this.userFollowRepository.getFollowUserData(userId, myId);
+    return await this.userFollowRepository.getFollowUserData(myId, userId);
   }
 
   async getUserByToken(token: string): Promise<User> {
