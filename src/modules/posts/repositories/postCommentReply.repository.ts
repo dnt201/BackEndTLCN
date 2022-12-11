@@ -4,8 +4,13 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { Page } from 'src/common/dto/Page';
+import { PagedData } from 'src/common/dto/PageData';
+import { ConvertReplyWithMoreInfo } from 'src/utils/convertReplyWithMoreInfo';
 import { DataSource, Repository } from 'typeorm';
+import { ReplyWithMoreInfo } from '../dtos/commentWithMoreInfo.dto';
 import { PostReplyDTO } from '../dtos/createReply.dto';
+import { ReplyPage } from '../dtos/replyPage.dto';
 import { PostReply } from '../entities/postReply.entity';
 
 @Injectable()
@@ -53,5 +58,40 @@ export class PostReplyRepository extends Repository<PostReply> {
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
+  }
+
+  async getAllReplyByCommentId(commentId: string, page: ReplyPage) {
+    const takeQuery = page.size ?? 10;
+    const skipQuery = page?.pageNumber > 0 ? page.pageNumber : 1;
+
+    const dataReturn: PagedData<ReplyWithMoreInfo> =
+      new PagedData<ReplyWithMoreInfo>();
+
+    try {
+      const listReply = await this.createQueryBuilder('PostReply')
+        .where('PostReply.commentId = :commentId', { commentId: commentId })
+        .leftJoin('PostReply.sender', 'Sender')
+        .leftJoin('PostReply.postReplyTags', 'PostReplyTag')
+        .leftJoin('PostReplyTag.sender', 'User_Tagged')
+        .orderBy('PostReply.dateModified', 'DESC')
+        .take(takeQuery)
+        .skip((skipQuery - 1) * takeQuery)
+        .select(['PostReply', 'Sender', 'PostReplyTag', 'User_Tagged'])
+        .getMany();
+
+      const listReplyWithData = listReply.map((data) =>
+        ConvertReplyWithMoreInfo(data),
+      );
+
+      const totalPost = await this.count({ where: { commentId: commentId } });
+
+      dataReturn.data = listReplyWithData;
+      dataReturn.page = new Page(takeQuery, skipQuery, totalPost, []);
+      return dataReturn;
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+
+    return false;
   }
 }

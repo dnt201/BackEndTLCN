@@ -1,25 +1,23 @@
 import {
-  CommentWithMoreInfo,
-  CommentWithMoreInfoDTO,
+  ReplyWithMoreInfo,
+  ReplyWithMoreInfoDTO,
   UserFewerDetail,
 } from 'src/modules/posts/dtos/commentWithMoreInfo.dto';
 
-export function ConvertCommentWithMoreInfo(data: CommentWithMoreInfoDTO) {
+export function ConvertReplyWithMoreInfo(data: ReplyWithMoreInfoDTO) {
   const tempData: UserFewerDetail[] = [];
   const requestToFile = 'http://localhost:3000/file/';
 
-  const postCommentTag = data.postCommentTags;
+  const postCommentTag = data.postReplyTags;
 
   postCommentTag.map((data) => {
     tempData.push(new UserFewerDetail(data.sender.id, data.sender.username));
   });
 
-  const dataReturn: CommentWithMoreInfo = {
-    commentId: data.commentId,
+  const dataReturn: ReplyWithMoreInfo = {
+    replyId: data.replyId,
     content: data.content,
-    countReply: data.countReply,
     dateModified: data.dateModified,
-    vote: data.vote,
     sender: {
       id: data.sender.id,
       username: data.sender.username,
@@ -27,7 +25,7 @@ export function ConvertCommentWithMoreInfo(data: CommentWithMoreInfoDTO) {
         ? `${requestToFile}${data.sender.avatarId}`
         : null,
     },
-    commentTag: [...tempData],
+    replyTag: [...tempData],
   };
   return dataReturn;
 }

@@ -17,7 +17,7 @@ import { File } from '../../files/entities/file.entity';
 @Entity('Post_Reply')
 export class PostReply implements IModified {
   @PrimaryGeneratedColumn('uuid')
-  public replyId?: string;
+  public replyId: string;
 
   @Column()
   commentId: string;
