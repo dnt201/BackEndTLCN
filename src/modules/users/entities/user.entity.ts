@@ -81,6 +81,15 @@ export class User implements ICreated, IModified, IDeleted {
   @Exclude()
   public dateExpires: Date;
 
+  @Column({ nullable: true })
+  @Index()
+  @Exclude()
+  public forgotPasswordToken: string;
+
+  @Column({ nullable: true })
+  @Exclude()
+  public dateForgotExpires: Date;
+
   @Column({ default: 'false' })
   @Exclude()
   public isActive: boolean;
