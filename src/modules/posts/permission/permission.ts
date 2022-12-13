@@ -11,4 +11,5 @@ export enum PostTag_Permission {
 export enum Post_Permission {
   ApprovePost = 'Approve Post',
   GetAllPostNeedApprove = 'Get All Post Need Approve',
+  ShowPostDetail = 'Show Post Detail',
 }
