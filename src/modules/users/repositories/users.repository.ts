@@ -126,6 +126,14 @@ export class UserRepository extends Repository<User> {
     }
   }
 
+  async validateForgotToken(token: string) {
+    try {
+      return await this.findOne({ where: [{ forgotPasswordToken: token }] });
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
+  }
+
   async getAllUser(page: UserPage, dataSearch: string) {
     const orderQuery =
       page?.order?.length === 0 ? {} : ConvertOrderQuery(page.order);

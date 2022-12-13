@@ -37,6 +37,11 @@ import { PagedData } from 'src/common/dto/PageData';
 import { User } from '../entities/user.entity';
 import { getTypeHeader } from 'src/utils/getTypeHeader';
 import { HeaderNotification } from 'src/common/constants/HeaderNotification.constant';
+import {
+  ForgotPasswordDTO,
+  ForgotPasswordFormDTO,
+  ValidatePasswordTokenDTO,
+} from '../dtos/forgotPassword.dto';
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -168,6 +173,35 @@ export class UsersController {
       updatePassword,
     );
     return getUserWithImageLink(userData);
+  }
+
+  @Post('/forgot-password')
+  async forgotPassword(@Body() forgotPasswordData: ForgotPasswordFormDTO) {
+    const user = await this.usersService.getUserByEmail(
+      forgotPasswordData.email,
+    );
+
+    if (!user) {
+      throw new NotFoundException(
+        `Not found user with email: ${forgotPasswordData.email}`,
+      );
+    } else {
+      return await this.usersService.forgotPassword(forgotPasswordData.email);
+    }
+  }
+
+  @Post('/validate-forgot-token')
+  async validateForgotToken(
+    @Body() validateForgotPasswordData: ValidatePasswordTokenDTO,
+  ) {
+    return await this.usersService.validateForgotToken(
+      validateForgotPasswordData.token,
+    );
+  }
+
+  @Post('/update-new-passsword')
+  async updateNewPassWithToken(@Body() forgotPasswordData: ForgotPasswordDTO) {
+    return await this.usersService.updateNewPassword(forgotPasswordData);
   }
 
   @Get('/deleted')
