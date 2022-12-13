@@ -1,3 +1,4 @@
+import { ForgotPasswordDTO } from './../dtos/forgotPassword.dto';
 import {
   BadRequestException,
   forwardRef,
@@ -49,6 +50,52 @@ export class UsersService {
       text: `Activate Account By TeachingMe with token ${activateToken}`,
     });
     return newUser;
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.getUserByEmail(email);
+    const forgotPasswordToken = await this.getActivateToken();
+    const forgotDateExipre = await this.getActivateDate();
+    await this.userRepository.save({
+      ...user,
+      forgotPasswordToken: forgotPasswordToken,
+      dateForgotExpires: forgotDateExipre,
+    });
+    await this.emailService.sendMail({
+      to: email,
+      subject: 'Recovery Password Account',
+      text: `Recovery Password Account TeachingMe with token ${forgotPasswordToken}`,
+    });
+    return true;
+  }
+
+  async validateForgotToken(token: string) {
+    const user = await this.userRepository.validateForgotToken(token);
+    if (!user) throw new NotFoundException(`Token does not exist`);
+    else if (Date.now() - user.dateForgotExpires.getTime() > 0)
+      throw new BadRequestException('Your token Over Time');
+    return true;
+  }
+
+  async updateNewPassword(forgotPasswordData: ForgotPasswordDTO) {
+    const TIME_EXPIRATION = 60 * 60 * 1000;
+    const user = await this.userRepository.validateForgotToken(
+      forgotPasswordData.token,
+    );
+    if (!user) throw new NotFoundException(`Token does not exist`);
+    else if (Date.now() - user.dateForgotExpires.getTime() > TIME_EXPIRATION)
+      throw new BadRequestException('Your token Over Time');
+    else if (forgotPasswordData.password !== forgotPasswordData.confirmPassword)
+      throw new BadRequestException('Confirm Password does not match');
+
+    const hashedPassword = await bcrypt.hash(forgotPasswordData.password, 10);
+    await this.userRepository.save({
+      ...user,
+      password: hashedPassword,
+      forgotPasswordToken: null,
+      dateForgotExpires: null,
+    });
+    return true;
   }
 
   async updateUserInfoWithAdmin(id: string, updateData: UpdateUserDTO) {
