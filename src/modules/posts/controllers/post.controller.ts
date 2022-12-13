@@ -835,6 +835,16 @@ export class PostController {
     }
   }
 
+  @Get('view/admin/:id')
+  @UseGuards(PermissionGuard(ListPermission.ShowPostDetail))
+  async showPostWithAdminId(@Param('id') id: string) {
+    const post = await this.postService.getPostById(id);
+    if (!post) {
+      throw new NotFoundException(`Not found post with id: ${id}`);
+    }
+    return post;
+  }
+
   @Delete('/:id')
   @UseGuards(JwtAuthenticationGuard)
   async deletePost(
