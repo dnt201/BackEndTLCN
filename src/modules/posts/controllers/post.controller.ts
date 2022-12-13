@@ -846,14 +846,13 @@ export class PostController {
 
     if (!post) {
       throw new NotFoundException(`Not found post with id: ${postId}`);
-    } else if (post.owner.id === user.id || user.role.displayName === 'Admin') {
+    } else if (post.owner.id === user.id || String(user.role) === 'Admin') {
       return await this.postService.deletePost(postId);
     } else {
       throw new BadRequestException(
         `You cannot delete post with id: ${postId}`,
       );
     }
-    console.log(post);
   }
 
   private async isExistPost(postId: string): Promise<boolean> {
