@@ -77,10 +77,12 @@ export class CategoryRepository extends TreeRepository<Category> {
   async updateCategory(id: string, updateCategoryData: UpdateCategoryDTO) {
     try {
       const data = await this.getCategoryById(id);
-      const categoryParent = await this.getCategoryById(
-        updateCategoryData.rootCategoryId,
-      );
-      data.rootCategory = categoryParent;
+      if (updateCategoryData.rootCategoryId) {
+        const categoryParent = await this.getCategoryById(
+          updateCategoryData.rootCategoryId,
+        );
+        data.rootCategory = categoryParent;
+      }
       data.categoryName = updateCategoryData.categoryName;
 
       return await this.dataSource.manager.save(data);

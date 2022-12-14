@@ -37,6 +37,7 @@ export class CategoryController {
     @Param('id') id: string,
     @Body() updateCategoryData: UpdateCategoryDTO,
   ) {
+    console.log(updateCategoryData);
     return await this.categoryService.updateCategory(id, updateCategoryData);
   }
 
