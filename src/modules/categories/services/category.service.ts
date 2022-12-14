@@ -63,23 +63,29 @@ export class CategoryService {
     categoryId: string,
     updateCategoryData: UpdateCategoryDTO,
   ) {
+    let categoryParent = null;
     const categoryExist = await this.categoryRepository.getCategoryByName(
       updateCategoryData.categoryName,
     );
-    const categoryParent = await this.categoryRepository.getCategoryById(
-      updateCategoryData.rootCategoryId,
-    );
+    if (updateCategoryData.rootCategoryId) {
+      categoryParent = await this.categoryRepository.getCategoryById(
+        updateCategoryData.rootCategoryId,
+      );
+    }
+
     if (categoryExist && categoryExist.id !== categoryId) {
       throw new BadRequestException(
         `Category name already exists. Try another name`,
       );
-    } else if (!categoryParent) {
+    } else if (!categoryParent && updateCategoryData.rootCategoryId) {
       throw new NotFoundException(`Not found parent category. Try another`);
     } else if (categoryParent && categoryParent.id === categoryId) {
       throw new BadRequestException(
         `Can not set this category: ${categoryParent.categoryName} is parent of category`,
       );
     }
+
+    console.log('GO here');
 
     await this.categoryRepository.updateCategory(
       categoryId,
